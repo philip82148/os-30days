@@ -1,4 +1,4 @@
-IMG=output/harib00a.img
+IMG=output/haribote-os.img
 
 all: $(IMG)
 .PHONY: all

@@ -1,6 +1,7 @@
 HELLOOS4=output/helloos4.img
 
 all: $(HELLOOS4)
+.PHONY: all
 
 helloos4: $(HELLOOS4)
 	qemu-system-i386 -drive format=raw,if=floppy,file=$(HELLOOS4)

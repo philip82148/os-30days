@@ -1,6 +1,7 @@
 IMG=output/harib00a.img
 
 all: $(IMG)
+.PHONY: all
 
 run: $(IMG)
 	qemu-system-i386 -drive format=raw,if=floppy,file=$(IMG)

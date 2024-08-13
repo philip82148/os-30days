@@ -1,5 +1,7 @@
 HELLOOS4=output/helloos4.img
 
+all: $(HELLOOS4)
+
 helloos4: $(HELLOOS4)
 	qemu-system-i386 -drive format=raw,if=floppy,file=$(HELLOOS4)
 .PHONY: helloos4
@@ -15,3 +17,6 @@ output/ipl.bin: ipl.nasm
 clean:
 	rm -rf output
 .PHONY: clean
+
+re: clean all
+.PHONY: re

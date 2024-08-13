@@ -34,16 +34,15 @@ entry:
     MOV DS, AX
 
 ; ディスクを読む
-
     MOV AX, 0x0820
-    MOV ES, AX
+    MOV ES, AX     ;
+    MOV BX, 0      ; ES:BX=0x8200
     MOV CH, 0      ; シリンダ
     MOV DH, 0      ; ヘッド
     MOV CL, 2      ; セクタ
 
     MOV AH, 0x02 ; AH=0x02: ディスク読み込み
     MOV AL, 1    ; 1セクタ
-    MOV BX, 0
     MOV DL, 0x00 ; Aドライブ
     INT 0x13     ; ディスクBIOS呼び出し
     JC  error

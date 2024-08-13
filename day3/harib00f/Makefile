@@ -1,0 +1,27 @@
+IMG=output/haribote-os.img
+
+all: $(IMG)
+.PHONY: all
+
+run: $(IMG)
+	qemu-system-i386 -drive format=raw,if=floppy,file=$(IMG)
+.PHONY: run
+
+$(IMG): output/ipl.bin output/haribote.sys
+	mformat -f 1440 -B output/ipl.bin -C -i $@
+	mcopy output/haribote.sys -i $@ ::
+
+output/haribote.sys: haribote.nasm
+	mkdir -p output
+	nasm haribote.nasm -o $@ -l output/haribote.lst
+
+output/ipl.bin: ipl.nasm
+	mkdir -p output
+	nasm ipl.nasm -o $@ -l output/ipl.lst
+
+clean:
+	rm -rf output
+.PHONY: clean
+
+re: clean all
+.PHONY: re

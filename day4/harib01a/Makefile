@@ -14,7 +14,7 @@ $(IMG): output/ipl.bin output/haribote.sys
 output/haribote.sys: output/asmhead.bin output/bootpack.bin
 	cat output/asmhead.bin output/bootpack.bin > $@
 
-output/bootpack.bin: bootpack.c output/nasmfunc.bin
+output/bootpack.bin: bootpack.lds bootpack.c output/nasmfunc.bin
 	mkdir -p output
 	gcc -nostdlib -m32 -fno-pie -T bootpack.lds bootpack.c output/nasmfunc.bin -o $@
 

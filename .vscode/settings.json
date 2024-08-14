@@ -1,3 +1,16 @@
 {
-  "cSpell.words": ["boxfill", "Hari", "kamaboko", "ysize"]
+  "cSpell.words": [
+    "binfo",
+    "BOOTINFO",
+    "boxfill",
+    "cyls",
+    "Hari",
+    "kamaboko",
+    "leds",
+    "putfont",
+    "scrnx",
+    "scrny",
+    "vmode",
+    "ysize"
+  ]
 }

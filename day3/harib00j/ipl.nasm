@@ -73,11 +73,8 @@ next:
     CMP CH, CYLS
     JB  readloop ; if CH < CYLS: goto readloop
 
-    JMP 0xc200 ; jump to the os program
-
-fin:
-    HLT
-    JMP fin
+    MOV [0x0ff0], CH
+    JMP 0xc200       ; jump to the os program
 
 error:
     MOV SI, msg
@@ -90,6 +87,10 @@ putloop:
     MOV BX, 15   ; カラーコード
     INT 0x10     ; ビデオBIOS呼び出し
     JMP putloop
+
+fin:
+    HLT
+    JMP fin
 
 msg:
     DB 0x0a, 0x0a   ; "\n\n"

@@ -1,10 +1,14 @@
 {
   "cSpell.words": [
+    "asmhead",
     "binfo",
     "BOOTINFO",
+    "bootpack",
+    "BOTPAK",
     "boxfill",
     "bxsize",
     "cyls",
+    "dsctbl",
     "gatedesc",
     "gdtidt",
     "gdtr",
@@ -15,6 +19,7 @@
     "kamaboko",
     "leds",
     "mcursor",
+    "nasmfunc",
     "putblock",
     "putfont",
     "putfonts",

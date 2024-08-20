@@ -41,11 +41,11 @@ void load_idtr(int limit, int addr);
 #define COL8_848484 15
 
 void init_palette();
-void set_palette(int start, int end, char *rgb);
-void boxfill8(char *vram, int xsize, char c, int x0, int y0, int x1, int y1);
+void set_palette(int start, int end, unsigned char *rgb);
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen8(char *vram, int x, int y);
-void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
-void putfonts8_asc(char *vram, int xsize, int x, int y, char c, char *s);
+void putfont8(char *vram, int xsize, int x, int y, unsigned char c, char *font);
+void putfonts8_asc(char *vram, int xsize, int x, int y, unsigned char c, char *s);
 void init_mouse_cursor8(char *mouse, char bc);
 void putblock8_8(
     char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize

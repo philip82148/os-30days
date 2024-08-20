@@ -5,10 +5,10 @@ int io_load_eflags();
 void io_store_eflags(int eflags);
 
 void init_palette();
-void set_palette(int start, int end, char *rgb);
-void boxfill8(char *vram, int xsize, char c, int x0, int y0, int x1, int y1);
+void set_palette(int start, int end, unsigned char *rgb);
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int x, int y);
-void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
+void putfont8(char *vram, int xsize, int x, int y, unsigned char c, char *font);
 
 #define COL8_000000 0
 #define COL8_FF0000 1
@@ -47,7 +47,7 @@ void HariMain() {
 }
 
 void init_palette(void) {
-  static char table_rgb[16 * 3] = {
+  static unsigned char table_rgb[16 * 3] = {
       0x00, 0x00, 0x00,  //  0:black
       0xff, 0x00, 0x00,  //  1:red
       0x00, 0xff, 0x00,  //  2:green
@@ -68,7 +68,7 @@ void init_palette(void) {
   set_palette(0, 15, table_rgb);
 }
 
-void set_palette(int start, int end, char *rgb) {
+void set_palette(int start, int end, unsigned char *rgb) {
   int eflags = io_load_eflags();
   io_cli();
   io_out8(0x03c8, start);
@@ -81,7 +81,7 @@ void set_palette(int start, int end, char *rgb) {
   io_store_eflags(eflags);
 }
 
-void boxfill8(char *vram, int xsize, char c, int x0, int y0, int x1, int y1) {
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
   for (int y = y0; y <= y1; y++) {
     for (int x = x0; x <= x1; x++) {
       vram[y * xsize + x] = c;
@@ -108,7 +108,7 @@ void init_screen(char *vram, int x, int y) {
   boxfill8(vram, x, COL8_FFFFFF, x - 3, y - 24, x - 3, y - 3);
 }
 
-void putfont8(char *vram, int xsize, int x, int y, char c, char *font) {
+void putfont8(char *vram, int xsize, int x, int y, unsigned char c, char *font) {
   for (int i = 0; i < 16; i++) {
     char *p = vram + (y + i) * xsize + x;
     char d = font[i];

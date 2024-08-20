@@ -39,7 +39,7 @@ void set_palette(int start, int end, unsigned char *rgb) {
   io_store_eflags(eflags);
 }
 
-void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
+void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
   for (int y = y0; y <= y1; y++) {
     for (int x = x0; x <= x1; x++) {
       vram[y * xsize + x] = c;
@@ -47,7 +47,7 @@ void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, in
   }
 }
 
-void init_screen8(char *vram, int x, int y) {
+void init_screen8(unsigned char *vram, int x, int y) {
   boxfill8(vram, x, COL8_008484, 0, 0, x - 1, y - 29);
   boxfill8(vram, x, COL8_C6C6C6, 0, y - 28, x - 1, y - 28);
   boxfill8(vram, x, COL8_FFFFFF, 0, y - 27, x - 1, y - 27);
@@ -66,10 +66,10 @@ void init_screen8(char *vram, int x, int y) {
   boxfill8(vram, x, COL8_FFFFFF, x - 3, y - 24, x - 3, y - 3);
 }
 
-void putfont8(char *vram, int xsize, int x, int y, unsigned char c, char *font) {
+void putfont8(unsigned char *vram, int xsize, int x, int y, unsigned char c, unsigned char *font) {
   for (int i = 0; i < 16; i++) {
-    char *p = vram + (y + i) * xsize + x;
-    char d = font[i];
+    unsigned char *p = vram + (y + i) * xsize + x;
+    unsigned char d = font[i];
     if ((d & 0x80) != 0) p[0] = c;
     if ((d & 0x40) != 0) p[1] = c;
     if ((d & 0x20) != 0) p[2] = c;
@@ -81,16 +81,18 @@ void putfont8(char *vram, int xsize, int x, int y, unsigned char c, char *font) 
   }
 }
 
-void putfonts8_asc(char *vram, int xsize, int x, int y, unsigned char c, char *s) {
-  extern char hankaku[4096];
+void putfonts8_asc(
+    unsigned char *vram, int xsize, int x, int y, unsigned char c, unsigned char *s
+) {
+  extern unsigned char hankaku[4096];
   for (; *s != 0x00; s++) {
     putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
     x += 8;
   }
 }
 
-void init_mouse_cursor8(char *mouse, char bc) {
-  static char cursor[16][16] = {
+void init_mouse_cursor8(unsigned char *mouse, unsigned char bc) {
+  static unsigned char cursor[16][16] = {
       "**************..",
       "*OOOOOOOOOOO*...",
       "*OOOOOOOOOO*....",
@@ -125,7 +127,14 @@ void init_mouse_cursor8(char *mouse, char bc) {
 }
 
 void putblock8_8(
-    char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize
+    unsigned char *vram,
+    int vxsize,
+    int pxsize,
+    int pysize,
+    int px0,
+    int py0,
+    unsigned char *buf,
+    int bxsize
 ) {
   for (int y = 0; y < pysize; y++) {
     for (int x = 0; x < pxsize; x++) {

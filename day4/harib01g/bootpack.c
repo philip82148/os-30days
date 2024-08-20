@@ -6,8 +6,7 @@ void io_store_eflags(int eflags);
 
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0,
-              int x1, int y1);
+void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 
 #define COL8_000000 0
 #define COL8_FF0000 1
@@ -41,22 +40,22 @@ void HariMain(void) {
 
 void init_palette(void) {
   static unsigned char table_rgb[16 * 3] = {
-      0x00, 0x00, 0x00, //  0:black
-      0xff, 0x00, 0x00, //  1:red
-      0x00, 0xff, 0x00, //  2:green
-      0xff, 0xff, 0x00, //  3:yellow
-      0x00, 0x00, 0xff, //  4:blue
-      0xff, 0x00, 0xff, //  5:purple
-      0x00, 0xff, 0xff, //  6:water blue
-      0xff, 0xff, 0xff, //  7:white
-      0xc6, 0xc6, 0xc6, //  8:gray
-      0x84, 0x00, 0x00, //  9:dark red
-      0x00, 0x84, 0x00, // 10:dark green
-      0x84, 0x84, 0x00, // 11:dark yellow
-      0x00, 0x00, 0x84, // 12:dark blue
-      0x84, 0x00, 0x84, // 13:dark purple
-      0x00, 0x84, 0x84, // 14:dark water blue
-      0x84, 0x84, 0x84  // 15:dark gray
+      0x00, 0x00, 0x00,  //  0:black
+      0xff, 0x00, 0x00,  //  1:red
+      0x00, 0xff, 0x00,  //  2:green
+      0xff, 0xff, 0x00,  //  3:yellow
+      0x00, 0x00, 0xff,  //  4:blue
+      0xff, 0x00, 0xff,  //  5:purple
+      0x00, 0xff, 0xff,  //  6:water blue
+      0xff, 0xff, 0xff,  //  7:white
+      0xc6, 0xc6, 0xc6,  //  8:gray
+      0x84, 0x00, 0x00,  //  9:dark red
+      0x00, 0x84, 0x00,  // 10:dark green
+      0x84, 0x84, 0x00,  // 11:dark yellow
+      0x00, 0x00, 0x84,  // 12:dark blue
+      0x84, 0x00, 0x84,  // 13:dark purple
+      0x00, 0x84, 0x84,  // 14:dark water blue
+      0x84, 0x84, 0x84   // 15:dark gray
   };
   set_palette(0, 15, table_rgb);
   return;
@@ -76,8 +75,7 @@ void set_palette(int start, int end, unsigned char *rgb) {
   return;
 }
 
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0,
-              int x1, int y1) {
+void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
   for (int y = y0; y <= y1; y++) {
     for (int x = x0; x <= x1; x++) {
       vram[y * xsize + x] = c;

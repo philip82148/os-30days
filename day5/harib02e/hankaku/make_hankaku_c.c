@@ -14,7 +14,7 @@ int main() {
     return 0;
   }
 
-  fputs("char hankaku[4096] =  {\n  ", out_c);
+  fputs("unsigned char hankaku[4096] =  {\n  ", out_c);
 
   char line[256];
   fgets(line, sizeof(line), in_txt);

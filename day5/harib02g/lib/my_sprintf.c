@@ -1,58 +1,82 @@
 #include <stdarg.h>
+#include <stdbool.h>
 
-int dec2asc(char *str, int dec) {
-  int len = 0, len_buf;
+int to_dec_asc(char *str, int len, char fill, int num) {
   int buf[10];
+  int i = 0;
   while (1) {
-    buf[len++] = dec % 10;
-    if (dec < 10) break;
-    dec /= 10;
+    buf[i++] = num % 10 + '0';
+    num /= 10;
+    if (!num) break;
   }
-  len_buf = len;
-  while (len) {
-    *(str++) = buf[--len] + 0x30;
-  }
-  return len_buf;
+
+  int digits = i;
+  if (len == 0) len = digits;
+  else if (len < digits) len = digits;
+
+  while (i--) str[len - 1 - i] = buf[i];
+
+  i = len - digits;
+  while (i--) str[i] = fill;
+
+  return len;
 }
 
-int hex2asc(char *str, int dec) {
-  int len = 0, len_buf;
+int to_hex_asc(char *str, int len, char fill, bool is_upper, int num) {
   int buf[10];
+  int i = 0;
   while (1) {
-    buf[len++] = dec % 16;
-    if (dec < 16) break;
-    dec /= 16;
+    int hex = num % 16;
+    buf[i++] = hex < 10 ? hex + '0' : hex - 10 + (is_upper ? 'A' : 'a');
+    num /= 16;
+    if (!num) break;
   }
-  len_buf = len;
-  while (len) {
-    len--;
-    *(str++) = (buf[len] < 10) ? (buf[len] + 0x30) : (buf[len] - 9 + 0x60);
-  }
-  return len_buf;
+
+  int digits = i;
+  if (len == 0) len = digits;
+  else if (len < digits) len = digits;
+
+  while (i--) str[len - 1 - i] = buf[i];
+
+  i = len - digits;
+  while (i--) str[i] = fill;
+
+  return len;
 }
 
 void my_sprintf(char *str, char *fmt, ...) {
   va_list list;
-  int i, len;
   va_start(list, fmt);
 
   while (*fmt) {
     if (*fmt == '%') {
+      char *fmt_start = fmt;
       fmt++;
-      switch (*fmt) {
-        case 'd':
-          len = dec2asc(str, va_arg(list, int));
-          break;
-        case 'x':
-          len = hex2asc(str, va_arg(list, int));
-          break;
+      if (*fmt == '%') {
+        *(str++) = *(fmt++);
+        continue;
       }
-      str += len;
-      fmt++;
-    } else {
-      *(str++) = *(fmt++);
+
+      char fill = *fmt == '0' || *fmt == ' ' ? *fmt++ : ' ';
+      int len = *fmt >= '1' && *fmt <= '9' ? *fmt++ - '0' : 0;
+      switch (*fmt++) {
+        case 'd':
+          str += to_dec_asc(str, len, fill, va_arg(list, int));
+          continue;
+        case 'x':
+          str += to_hex_asc(str, len, fill, false, va_arg(list, int));
+          continue;
+        case 'X':
+          str += to_hex_asc(str, len, fill, true, va_arg(list, int));
+          continue;
+        default:
+          fmt = fmt_start;
+      }
     }
+
+    *(str++) = *(fmt++);
   }
   *str = 0x00;
+
   va_end(list);
 }

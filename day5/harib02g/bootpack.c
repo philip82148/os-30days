@@ -9,7 +9,7 @@ void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(unsigned char *vram, int x, int y);
 void putfont8(unsigned char *vram, int xsize, int x, int y, unsigned char c, unsigned char *font);
-void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c, unsigned char *s);
+void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c, char *s);
 
 void my_sprintf(char *str, char *fmt, ...);
 
@@ -129,12 +129,10 @@ void putfont8(unsigned char *vram, int xsize, int x, int y, unsigned char c, uns
   }
 }
 
-void putfonts8_asc(
-    unsigned char *vram, int xsize, int x, int y, unsigned char c, unsigned char *s
-) {
+void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c, char *s) {
   extern unsigned char hankaku[4096];
   for (; *s != 0x00; s++) {
-    putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
+    putfont8(vram, xsize, x, y, c, hankaku + ((unsigned char)*s) * 16);
     x += 8;
   }
 }

@@ -1,6 +1,9 @@
+/*
+ * graphic.c
+ */
+
 #include "bootpack.h"
 
-// Initialization of PIC
 void init_pic() {
   io_out8(PIC0_IMR, 0xff);  // 全割り込み禁止
   io_out8(PIC1_IMR, 0xff);  // 全割り込み禁止

@@ -33,12 +33,14 @@ void inthandler21(int *esp) {
   fifo8_put(&keyfifo, data);
 }
 
+struct FIFO8 mousefifo;
+
 // PS/2マウス割込み
 void inthandler2c(int *esp) {
-  struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
-  boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 32 * 8 - 1, 15);
-  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 2C (IRQ-12) : PS/2 mouse");
-  for (;;) io_hlt();
+  io_out8(PIC1_OCW2, 0x64);  // PIC1へIRQ-12完了通知
+  io_out8(PIC0_OCW2, 0x62);  // PIC2へIRQ-02完了通知
+  int data = io_in8(PORT_KEYDAT);
+  fifo8_put(&mousefifo, data);
 }
 
 // Prevention for unsuccessful interrupt

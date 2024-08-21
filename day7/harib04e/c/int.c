@@ -4,8 +4,6 @@
 
 #include "bootpack.h"
 
-#define PORT_KEYDAT 0x0060
-
 void init_pic() {
   io_out8(PIC0_IMR, 0xff);  // 全割り込み禁止
   io_out8(PIC1_IMR, 0xff);  // 全割り込み禁止
@@ -24,16 +22,15 @@ void init_pic() {
   io_out8(PIC1_IMR, 0xff);  // 全割り込み禁止
 }
 
+#define PORT_KEYDAT 0x0060
+
+struct FIFO8 keyfifo;
+
 // PS/2キーボード割込み
 void inthandler21(int *esp) {
-  struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   io_out8(PIC0_OCW2, 0x61);        //  PICへIRQ-01完了通知
   int data = io_in8(PORT_KEYDAT);  // Key code
-
-  char s[4];
-  my_sprintf(s, "%02X", data);
-  boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+  fifo8_put(&keyfifo, data);
 }
 
 // PS/2マウス割込み

@@ -17,6 +17,7 @@ struct BOOTINFO {
 void io_hlt();
 void io_cli();
 void io_sti();
+void io_stihlt();
 void io_out8(int port, int data);
 int io_in8(int port);
 int io_load_eflags();
@@ -26,6 +27,16 @@ void load_idtr(int limit, int addr);
 void asm_inthandler21();
 void asm_inthandler27();
 void asm_inthandler2c();
+
+// fifo.c -----------------------------------------------------------------------------------------
+struct FIFO8 {
+  unsigned char *buf;
+  int p, q, size, free, flags;
+};
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);
+int fifo8_get(struct FIFO8 *fifo);
+int fifo8_status(struct FIFO8 *fifo);
 
 // graphic.c --------------------------------------------------------------------------------------
 #define COL8_000000 0

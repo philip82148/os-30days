@@ -133,28 +133,3 @@ unsigned int memtest(unsigned int start, unsigned int end) {
 
   return i;
 }
-
-unsigned int memtest_sub(unsigned int start, unsigned int end) {
-  unsigned i, *p, old, pat0 = 0xaa55aa55, pat1 = 0x55aa55aa;
-  for (i = start; i <= end; i += 0x1000) {
-    p = (unsigned int *)(i + 0xffc);
-    old = *p;          // Remember the first value
-    *p = pat0;         // Try writing
-    *p ^= 0xffffffff;  // Reverse value
-
-    // Does reverse work?
-    if (*p != pat1) {
-    not_memory:
-      *p = old;
-      break;
-    }
-    *p ^= 0xffffffff;  // Reverse again
-
-    // Is it original?
-    if (*p != pat0) {
-      goto not_memory;
-    }
-    *p = old;  // Restore original value
-  }
-  return i;
-}

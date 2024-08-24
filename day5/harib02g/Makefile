@@ -14,8 +14,8 @@ $(IMG): output/ipl.bin output/haribote.sys
 output/haribote.sys: output/asmhead.bin output/bootpack.bin
 	cat output/asmhead.bin output/bootpack.bin > $@
 
-output/bootpack.bin: bootpack.lds bootpack.c output/nasmfunc.bin output/hankaku.c lib/my_sprintf.c
-	gcc -nostdlib -m32 -fno-pie -T bootpack.lds bootpack.c output/hankaku.c output/nasmfunc.bin lib/my_sprintf.c -o $@
+output/bootpack.bin: bootpack.lds bootpack.c output/nasmfunc.bin output/hankaku.c ../../lib/my_sprintf.c
+	gcc -nostdlib -m32 -fno-pie -T $^ -o $@
 
 output/hankaku.c: output/make_hankaku_c hankaku/hankaku.txt
 	./output/make_hankaku_c

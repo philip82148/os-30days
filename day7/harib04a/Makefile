@@ -25,6 +25,10 @@ output/%.o: %.c
 	mkdir -p $(@D)
 	gcc -nostdlib -m32 -fno-pie $< -c -o $@
 
+output/lib/%.o: ../../lib/%.c
+	mkdir -p $(@D)
+	gcc -nostdlib -m32 -fno-pie $< -c -o $@
+
 output/hankaku.o: output/hankaku.c
 	gcc -nostdlib -m32 -fno-pie $< -c -o $@
 

@@ -4,14 +4,21 @@
 
 #include "bootpack.h"
 
+struct MOUSE_DEC {
+  unsigned char buf[3], phase;
+  int x, y, btn;
+};
+
 extern struct FIFO8 keyfifo, mousefifo;
-void enable_mouse();
+void enable_mouse(struct MOUSE_DEC *mdec);
 void init_keyboard();
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 
 void HariMain() {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   char s[40];
   unsigned char mcursor[256], keybuf[32], mousebuf[128];
+  struct MOUSE_DEC mdec;
 
   init_gdtidt();
   init_pic();
@@ -34,7 +41,7 @@ void HariMain() {
   my_sprintf(s, "(%d, %d)", mx, my);
   putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
-  enable_mouse();
+  enable_mouse(&mdec);
 
   for (;;) {
     io_cli();
@@ -50,9 +57,46 @@ void HariMain() {
       } else if (fifo8_status(&mousefifo) != 0) {
         int i = fifo8_get(&mousefifo);
         io_sti();
-        my_sprintf(s, "%02X", i);
-        boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 47, 31);
-        putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+        // 3-byte of data chunked
+        if (mouse_decode(&mdec, i) != 0) {
+          my_sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
+          if ((mdec.btn & 0x01) != 0) {
+            s[1] = 'L';
+          }
+          if ((mdec.btn & 0x02) != 0) {
+            s[3] = 'R';
+          }
+          if ((mdec.btn & 0x04) != 0) {
+            s[2] = 'C';
+          }
+          boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 15 * 8 - 1, 31);
+          putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+          // Mouse movement
+          boxfill8(
+              binfo->vram, binfo->scrnx, COL8_008484, mx, my, mx + 15, my + 15
+          );  // Remove mouse
+          mx += mdec.x;
+          my += mdec.y;
+
+          // Prevent mouse going out of display
+          if (mx < 0) {
+            mx = 0;
+          }
+          if (my < 0) {
+            my = 0;
+          }
+          if (mx > binfo->scrnx - 16) {
+            mx = binfo->scrnx - 16;
+          }
+          if (my > binfo->scrny - 16) {
+            my = binfo->scrny - 16;
+          }
+
+          my_sprintf(s, "(%d, %d)", mx, my);
+          boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 79, 15);       // Delete coordinate
+          putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);       // Write coordinate
+          putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);  // Draw mouse
+        }
       }
     }
   }
@@ -72,7 +116,7 @@ void wait_KBC_sendready() {
   }
 }
 
-// Reset keyboad controller
+// Reset keyboard controller
 void init_keyboard() {
   wait_KBC_sendready();
   io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
@@ -84,10 +128,58 @@ void init_keyboard() {
 #define KEYCMD_SENDTO_MOUSE 0xd4
 #define MOUSECMD_ENABLE     0xf4
 
-void enable_mouse() {
+void enable_mouse(struct MOUSE_DEC *mdec) {
   wait_KBC_sendready();
   io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
   wait_KBC_sendready();
   io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
   return;  // Return ACK(0xfa) at success
+}
+
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat) {
+  // ACK(0xfa)
+  if (mdec->phase == 0) {
+    if (dat == 0xfa) {
+      mdec->phase = 1;
+    }
+    return 0;
+  }
+
+  // 1st byte
+  if (mdec->phase == 1) {
+    // Proper byte
+    if ((dat & 0xc8) == 0x08) {
+      mdec->buf[0] = dat;
+      mdec->phase = 2;
+    }
+    return 0;
+  }
+
+  // 2nd byte
+  if (mdec->phase == 2) {
+    mdec->buf[1] = dat;
+    mdec->phase = 3;
+    return 0;
+  }
+
+  // 3rd byte
+  if (mdec->phase == 3) {
+    mdec->buf[2] = dat;
+    mdec->phase = 1;
+    mdec->btn = mdec->buf[0] & 0x07;
+    mdec->x = mdec->buf[1];
+    mdec->y = mdec->buf[2];
+
+    if ((mdec->buf[0] & 0x10) != 0) {
+      mdec->x |= 0xffffff00;
+    }
+    if ((mdec->buf[0] & 0x20) != 0) {
+      mdec->y |= 0xffffff00;
+    }
+
+    mdec->y = -mdec->y;  // マウスのy方向の符号が画面と反対
+    return 1;
+  }
+
+  return -1;
 }

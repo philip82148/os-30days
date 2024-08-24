@@ -2,13 +2,17 @@
 #include <stdbool.h>
 
 int to_dec_asc(char *str, int len, char fill, int num) {
-  int buf[10];
+  bool is_negative = num < 0;
+  if (is_negative) num = -num;
+
+  int buf[20];
   int i = 0;
   while (1) {
     buf[i++] = num % 10 + '0';
     num /= 10;
     if (!num) break;
   }
+  if (is_negative) buf[i++] = '-';
 
   int digits = i;
   if (len == 0) len = digits;
@@ -22,8 +26,8 @@ int to_dec_asc(char *str, int len, char fill, int num) {
   return len;
 }
 
-int to_hex_asc(char *str, int len, char fill, bool is_upper, int num) {
-  int buf[10];
+int to_hex_asc(char *str, int len, char fill, bool is_upper, unsigned int num) {
+  int buf[20];
   int i = 0;
   while (1) {
     int hex = num % 16;

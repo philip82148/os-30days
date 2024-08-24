@@ -29,6 +29,7 @@ void store_cr0(int cr0);
 void asm_inthandler21();
 void asm_inthandler27();
 void asm_inthandler2c();
+unsigned int memtest_sub(unsigned int start, unsigned int end);
 
 // fifo.c -----------------------------------------------------------------------------------------
 struct FIFO8 {

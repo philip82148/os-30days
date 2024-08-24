@@ -4,6 +4,8 @@
 
 #include "bootpack.h"
 
+#define PORT_KEYDAT 0x0060
+
 void init_pic() {
   io_out8(PIC0_IMR, 0xff);  // 全割り込み禁止
   io_out8(PIC1_IMR, 0xff);  // 全割り込み禁止
@@ -20,27 +22,6 @@ void init_pic() {
 
   io_out8(PIC0_IMR, 0xfb);  // PIC1以外割り込み禁止
   io_out8(PIC1_IMR, 0xff);  // 全割り込み禁止
-}
-
-#define PORT_KEYDAT 0x0060
-
-struct FIFO8 keyfifo;
-
-// PS/2キーボード割込み
-void inthandler21(int *esp) {
-  io_out8(PIC0_OCW2, 0x61);        //  PICへIRQ-01完了通知
-  int data = io_in8(PORT_KEYDAT);  // Key code
-  fifo8_put(&keyfifo, data);
-}
-
-struct FIFO8 mousefifo;
-
-// PS/2マウス割込み
-void inthandler2c(int *esp) {
-  io_out8(PIC1_OCW2, 0x64);  // PIC1へIRQ-12完了通知
-  io_out8(PIC0_OCW2, 0x62);  // PIC2へIRQ-02完了通知
-  int data = io_in8(PORT_KEYDAT);
-  fifo8_put(&mousefifo, data);
 }
 
 // Prevention for unsuccessful interrupt

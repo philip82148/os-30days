@@ -17,9 +17,9 @@ $(IMG): output/ipl.bin output/haribote.sys
 output/haribote.sys: output/asmhead.bin output/bootpack.hrb
 	cat $^ > $@
 
-output/bootpack.hrb: bootpack.lds output/nasmfunc.o output/hankaku.o output/lib/my_sprintf.o\
-					 output/c/graphic.o output/c/dsctbl.o output/c/int.o output/c/fifo.o \
-					 output/c/bootpack.o
+output/bootpack.hrb: bootpack.lds output/c/bootpack.o output/nasmfunc.o output/hankaku.o \
+					 output/lib/my_sprintf.o output/c/graphic.o output/c/dsctbl.o output/c/int.o \
+					 output/c/fifo.o output/c/keyboard.o output/c/mouse.o
 	gcc -nostdlib -m32 -fno-pie -T $^ -o $@
 
 output/%.o: %.c

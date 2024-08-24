@@ -25,6 +25,7 @@
     "KEYSTA",
     "leds",
     "mcursor",
+    "mdec",
     "MOUSECMD",
     "mousefifo",
     "nasmfunc",

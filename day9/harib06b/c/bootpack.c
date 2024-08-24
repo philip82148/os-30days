@@ -4,6 +4,9 @@
 
 #include "bootpack.h"
 
+unsigned int memtest(unsigned int start, unsigned int end);
+unsigned int memtest_sub(unsigned int start, unsigned int end);
+
 void HariMain() {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   char s[40];
@@ -20,6 +23,7 @@ void HariMain() {
   io_out8(PIC1_IMR, 0xef);  // Arrow mouse (11101111)
 
   init_keyboard();
+  enable_mouse(&mdec);
 
   init_palette();
   init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
@@ -31,7 +35,9 @@ void HariMain() {
   my_sprintf(s, "(%3d, %3d)", mx, my);
   putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
-  enable_mouse(&mdec);
+  int i = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
+  my_sprintf(s, "memory %dMB", i);
+  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
   for (;;) {
     io_cli();
@@ -90,4 +96,65 @@ void HariMain() {
       }
     }
   }
+}
+
+#define EFLAGS_AC_BIT     0x00040000
+#define CR0_CACHE_DISABLE 0x60000000
+
+unsigned int memtest(unsigned int start, unsigned int end) {
+  char flg486 = 0;
+  unsigned int eflg, cr0, i;
+
+  // Check if 386 or later
+  eflg = io_load_eflags();
+  eflg |= EFLAGS_AC_BIT;  // AC-bit = 1
+  io_store_eflags(eflg);
+  eflg = io_load_eflags();
+  // On 386, AC-bit automatically go back to 0
+  if ((eflg & EFLAGS_AC_BIT) != 0) {
+    flg486 = 1;
+  }
+  eflg &= ~EFLAGS_AC_BIT;  // AC-bit = 0
+  io_store_eflags(eflg);
+
+  if (flg486 != 0) {
+    cr0 = load_cr0();
+    cr0 |= CR0_CACHE_DISABLE;  // Disable cache
+    store_cr0(cr0);
+  }
+
+  i = memtest_sub(start, end);
+
+  if (flg486 != 0) {
+    cr0 = load_cr0();
+    cr0 &= ~CR0_CACHE_DISABLE;  // Enable cache
+    store_cr0(cr0);
+  }
+
+  return i;
+}
+
+unsigned int memtest_sub(unsigned int start, unsigned int end) {
+  unsigned i, *p, old, pat0 = 0xaa55aa55, pat1 = 0x55aa55aa;
+  for (i = start; i <= end; i += 0x1000) {
+    p = (unsigned int *)(i + 0xffc);
+    old = *p;          // Remember the first value
+    *p = pat0;         // Try writing
+    *p ^= 0xffffffff;  // Reverse value
+
+    // Does reverse work?
+    if (*p != pat1) {
+    not_memory:
+      *p = old;
+      break;
+    }
+    *p ^= 0xffffffff;  // Reverse again
+
+    // Is it original?
+    if (*p != pat0) {
+      goto not_memory;
+    }
+    *p = old;  // Restore original value
+  }
+  return i;
 }

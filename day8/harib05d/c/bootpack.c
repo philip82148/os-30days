@@ -38,7 +38,7 @@ void HariMain() {
   int my = (binfo->scrny - 28 - 16) / 2;
   init_mouse_cursor8(mcursor, COL8_008484);
   putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
-  my_sprintf(s, "(%d, %d)", mx, my);
+  my_sprintf(s, "(%3d, %3d)", mx, my);
   putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
   enable_mouse(&mdec);
@@ -92,7 +92,7 @@ void HariMain() {
             my = binfo->scrny - 16;
           }
 
-          my_sprintf(s, "(%d, %d)", mx, my);
+          my_sprintf(s, "(%3d, %3d)", mx, my);
           boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 79, 15);       // Delete coordinate
           putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);       // Write coordinate
           putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);  // Draw mouse

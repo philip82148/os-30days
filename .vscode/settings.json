@@ -43,6 +43,7 @@
     "putfonts",
     "pxsize",
     "pysize",
+    "refreshmap",
     "refreshsub",
     "scrnx",
     "scrny",

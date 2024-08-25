@@ -81,7 +81,7 @@ void putfont8(unsigned char *vram, int xsize, int x, int y, unsigned char c, uns
   }
 }
 
-void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c, char *s) {
+void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c, const char *s) {
   extern unsigned char hankaku[4096];
   for (; *s != 0x00; s++) {
     putfont8(vram, xsize, x, y, c, hankaku + ((unsigned char)*s) * 16);

@@ -3,7 +3,7 @@
  */
 
 // lib/my_sprint.c --------------------------------------------------------------------------------
-void my_sprintf(char *str, char *fmt, ...);
+void my_sprintf(char *str, const char *fmt, ...);
 
 // asmhead.nas ------------------------------------------------------------------------------------
 #define ADR_BOOTINFO 0x00000ff0
@@ -49,7 +49,7 @@ void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen8(unsigned char *vram, int x, int y);
 void putfont8(unsigned char *vram, int xsize, int x, int y, unsigned char c, unsigned char *font);
-void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c, char *s);
+void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c, const char *s);
 void init_mouse_cursor8(unsigned char *mouse, unsigned char bc);
 void putblock8_8(
     unsigned char *vram,

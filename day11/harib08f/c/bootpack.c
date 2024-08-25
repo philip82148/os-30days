@@ -43,14 +43,12 @@ void HariMain() {
   unsigned char buf_mouse[256];
   sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);  // Transparent Number is 99
 
-  unsigned char *buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 68);
-  sheet_setbuf(sht_win, buf_win, 160, 68, -1);
+  unsigned char *buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 52);
+  sheet_setbuf(sht_win, buf_win, 160, 52, -1);  // No transparency
 
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99);
-  make_window8(buf_win, 160, 68, "window");
-  putfonts8_asc(buf_win, 160, 24, 28, COL8_000000, "Welcome to");
-  putfonts8_asc(buf_win, 160, 24, 44, COL8_000000, "Haribote-OS!");
+  make_window8(buf_win, 160, 68, "counter");
   sheet_slide(sht_back, 0, 0);
 
   // Centering in screen
@@ -68,10 +66,17 @@ void HariMain() {
   putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
+  int count = 0;
   for (;;) {
-    io_cli();
+    count++;
+    my_sprintf(s, "%010d", count);
+    boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
+    putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
+    sheet_refresh(sht_win, 40, 28, 120, 44);
+
+    io_cli();  // 一旦割り込み禁止
     if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
-      io_stihlt();
+      io_sti();  // 割り込み許可
     } else {
       if (fifo8_status(&keyfifo) != 0) {
         int i = fifo8_get(&keyfifo);

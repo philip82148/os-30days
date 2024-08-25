@@ -62,7 +62,9 @@ void my_sprintf(char *str, const char *fmt, ...) {
       }
 
       char fill = *fmt == '0' || *fmt == ' ' ? *fmt++ : ' ';
-      int len = *fmt >= '1' && *fmt <= '9' ? *fmt++ - '0' : 0;
+      int len = 0;
+      while (*fmt >= '0' && *fmt <= '9') len = len * 10 + *fmt++ - '0';
+
       switch (*fmt++) {
         case 'd':
           str += to_dec_asc(str, len, fill, va_arg(list, int));

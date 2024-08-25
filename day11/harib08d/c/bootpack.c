@@ -4,6 +4,8 @@
 
 #include "bootpack.h"
 
+void make_window8(unsigned char *buf, int xsize, int ysize, const char *title);
+
 void HariMain() {
   init_gdtidt();
   init_pic();
@@ -33,6 +35,7 @@ void HariMain() {
   struct SHTCTL *shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
   struct SHEET *sht_back = sheet_alloc(shtctl);
   struct SHEET *sht_mouse = sheet_alloc(shtctl);
+  struct SHEET *sht_win = sheet_alloc(shtctl);
 
   unsigned char *buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
   sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);  // No transparency
@@ -40,16 +43,24 @@ void HariMain() {
   unsigned char buf_mouse[256];
   sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);  // Transparent Number is 99
 
+  unsigned char *buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 68);
+  sheet_setbuf(sht_win, buf_win, 160, 68, -1);
+
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99);
+  make_window8(buf_win, 160, 68, "window");
+  putfonts8_asc(buf_win, 160, 24, 28, COL8_000000, "Welcome to");
+  putfonts8_asc(buf_win, 160, 24, 44, COL8_000000, "Haribote-OS!");
   sheet_slide(sht_back, 0, 0);
 
   // Centering in screen
   int mx = (binfo->scrnx - 16) / 2;
   int my = (binfo->scrny - 28 - 16) / 2;
   sheet_slide(sht_mouse, mx, my);
+  sheet_slide(sht_win, 80, 72);
   sheet_updown(sht_back, 0);
-  sheet_updown(sht_mouse, 1);
+  sheet_updown(sht_win, 1);
+  sheet_updown(sht_mouse, 2);
   char s[40];
   my_sprintf(s, "(%3d, %3d)", mx, my);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
@@ -98,6 +109,51 @@ void HariMain() {
           sheet_slide(sht_mouse, mx, my);
         }
       }
+    }
+  }
+}
+
+void make_window8(unsigned char *buf, int xsize, int ysize, const char *title) {
+  static char close_btn[14][16] = {
+      "OOOOOOOOOOOOOOO@",
+      "OQQQQQQQQQQQQQ$@",
+      "OQQQQQQQQQQQQQ$@",
+      "OQQQ@@QQQQ@@QQ$@",
+      "OQQQQ@@QQ@@QQQ$@",
+      "OQQQQQ@@@@QQQQ$@",
+      "OQQQQQQ@@QQQQQ$@",
+      "OQQQQQ@@@@QQQQ$@",
+      "OQQQQ@@QQ@@QQQ$@",
+      "OQQQ@@QQQQ@@QQ$@",
+      "OQQQQQQQQQQQQQ$@",
+      "OQQQQQQQQQQQQQ$@",
+      "O$$$$$$$$$$$$$$@",
+      "@@@@@@@@@@@@@@@@"
+  };
+  boxfill8(buf, xsize, COL8_C6C6C6, 0, 0, xsize - 1, 0);
+  boxfill8(buf, xsize, COL8_FFFFFF, 1, 1, xsize - 2, 1);
+  boxfill8(buf, xsize, COL8_C6C6C6, 0, 0, 0, ysize - 1);
+  boxfill8(buf, xsize, COL8_FFFFFF, 1, 1, 1, ysize - 2);
+  boxfill8(buf, xsize, COL8_848484, xsize - 2, 1, xsize - 2, ysize - 2);
+  boxfill8(buf, xsize, COL8_000000, xsize - 1, 0, xsize - 1, ysize - 1);
+  boxfill8(buf, xsize, COL8_C6C6C6, 2, 2, xsize - 3, ysize - 3);
+  boxfill8(buf, xsize, COL8_000084, 3, 3, xsize - 4, 20);
+  boxfill8(buf, xsize, COL8_848484, 1, ysize - 2, xsize - 2, ysize - 2);
+  boxfill8(buf, xsize, COL8_000000, 0, ysize - 1, xsize - 1, ysize - 1);
+  putfonts8_asc(buf, xsize, 24, 4, COL8_FFFFFF, title);
+  for (int y = 0; y < 14; y++) {
+    for (int x = 0; x < 16; x++) {
+      char color = close_btn[y][x];
+      if (color == '@') {
+        color = COL8_000000;
+      } else if (color == '$') {
+        color = COL8_848484;
+      } else if (color == 'Q') {
+        color = COL8_C6C6C6;
+      } else {
+        color = COL8_FFFFFF;
+      }
+      buf[(5 + y) * xsize + (xsize - 21 + x)] = color;
     }
   }
 }

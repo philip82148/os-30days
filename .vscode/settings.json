@@ -33,6 +33,8 @@
     "mdec",
     "MEMMAN",
     "memtest",
+    "memtotal",
+    "mousebuf",
     "MOUSECMD",
     "mousefifo",
     "nasmfunc",

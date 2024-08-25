@@ -48,13 +48,13 @@ int to_hex_asc(char *str, int len, char fill, bool is_upper, unsigned int num) {
   return len;
 }
 
-void my_sprintf(char *str, char *fmt, ...) {
+void my_sprintf(char *str, const char *fmt, ...) {
   va_list list;
   va_start(list, fmt);
 
   while (*fmt) {
     if (*fmt == '%') {
-      char *fmt_start = fmt;
+      const char *fmt_start = fmt;
       fmt++;
       if (*fmt == '%') {
         *(str++) = *(fmt++);

@@ -40,6 +40,30 @@ void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, i
   sht->col_inv = col_inv;
 }
 
+void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
+  for (int height = 0; height <= ctl->top; height++) {
+    struct SHEET *sht = ctl->sheets[height];
+    int sht_x0 = vx0 - sht->vx0;
+    int sht_y0 = vy0 - sht->vy0;
+    int sht_x1 = vx1 - sht->vx0;
+    int sht_y1 = vy1 - sht->vy0;
+    if (sht_x0 < 0) sht_x0 = 0;
+    if (sht_y0 < 0) sht_y0 = 0;
+    if (sht_x1 > sht->bxsize) sht_x1 = sht->bxsize;
+    if (sht_y1 > sht->bysize) sht_y1 = sht->bysize;
+    for (int sht_y = sht_y0; sht_y < sht_y1; sht_y++) {
+      int vy = sht->vy0 + sht_y;
+      for (int sht_x = sht_x0; sht_x < sht_x1; sht_x++) {
+        int vx = sht->vx0 + sht_x;
+        if (vx >= vx0 && vx < vx1 && vy >= vy0 && vy < vy1) {
+          unsigned char color = sht->buf[sht_y * sht->bxsize + sht_x];
+          if (color != sht->col_inv) ctl->vram[vy * ctl->xsize + vx] = color;
+        }
+      }
+    }
+  }
+}
+
 void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
   // ここでのheightはzIndexのこと
   int old_height = sht->height;  // Remember current height
@@ -69,7 +93,7 @@ void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
       }
       ctl->top--;  // 憑依中の下敷きが一つ減るので、一番上の高さが減る
     }
-    sheet_refresh(ctl);
+    sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
   } else if (old_height < height) {
     // 以前よりも高くなる
     // 上と同じ
@@ -87,31 +111,28 @@ void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
       ctl->sheets[height] = sht;
       ctl->top++;
     }
-    sheet_refresh(ctl);
+    sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
   }
 }
 
-void sheet_refresh(struct SHTCTL *ctl) {
-  for (int height = 0; height <= ctl->top; height++) {
-    struct SHEET *sht = ctl->sheets[height];
-    unsigned char *buf = sht->buf;
-    for (int sheet_y = 0; sheet_y < sht->bysize; sheet_y++) {
-      int vy = sht->vy0 + sheet_y;
-      for (int sheet_x = 0; sheet_x < sht->bxsize; sheet_x++) {
-        int vx = sht->vx0 + sheet_x;
-        unsigned char color = buf[sheet_y * sht->bxsize + sheet_x];
-        if (color != sht->col_inv) {
-          ctl->vram[vy * ctl->xsize + vx] = color;
-        }
-      }
-    }
-  }
+void sheet_refresh(
+    struct SHTCTL *ctl, struct SHEET *sht, int sht_x0, int sht_y0, int sht_x1, int sht_y1
+) {
+  if (sht->height >= 0)
+    sheet_refreshsub(
+        ctl, sht->vx0 + sht_x0, sht->vy0 + sht_y0, sht->vx0 + sht_x1, sht->vy0 + sht_y1
+    );
 }
 
 void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0) {
+  int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
   sht->vx0 = vx0;
   sht->vy0 = vy0;
-  if (sht->height >= 0) sheet_refresh(ctl);
+
+  if (sht->height >= 0) {
+    sheet_refreshsub(ctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize);
+    sheet_refreshsub(ctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize);
+  }
 }
 
 void sheet_free(struct SHTCTL *ctl, struct SHEET *sht) {

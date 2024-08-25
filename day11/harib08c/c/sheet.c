@@ -15,7 +15,10 @@ struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize
   ctl->ysize = ysize;
   ctl->top = -1;  // シートは一枚もない
 
-  for (int i = 0; i < MAX_SHEETS; i++) ctl->sheets0[i].flags = 0;  // 未使用マーク
+  for (int i = 0; i < MAX_SHEETS; i++) {
+    ctl->sheets0[i].flags = 0;  // 未使用マーク
+    ctl->sheets0[i].ctl = ctl;
+  }
 
 err:
   return ctl;
@@ -69,9 +72,11 @@ void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
   }
 }
 
-void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
+void sheet_updown(struct SHEET *sht, int height) {
+  struct SHTCTL *ctl = sht->ctl;
+
   // ここでのheightはzIndexのこと
-  int old_height = sht->height;  // Remember current height
+  int old_height = sht->height;
 
   // 高さの修正
   if (height > ctl->top + 1) height = ctl->top + 1;
@@ -120,16 +125,16 @@ void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
   }
 }
 
-void sheet_refresh(
-    struct SHTCTL *ctl, struct SHEET *sht, int sht_x0, int sht_y0, int sht_x1, int sht_y1
-) {
+void sheet_refresh(struct SHEET *sht, int sht_x0, int sht_y0, int sht_x1, int sht_y1) {
+  struct SHTCTL *ctl = sht->ctl;
   if (sht->height >= 0)
     sheet_refreshsub(
         ctl, sht->vx0 + sht_x0, sht->vy0 + sht_y0, sht->vx0 + sht_x1, sht->vy0 + sht_y1
     );
 }
 
-void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0) {
+void sheet_slide(struct SHEET *sht, int vx0, int vy0) {
+  struct SHTCTL *ctl = sht->ctl;
   int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
   sht->vx0 = vx0;
   sht->vy0 = vy0;
@@ -140,7 +145,7 @@ void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0) {
   }
 }
 
-void sheet_free(struct SHTCTL *ctl, struct SHEET *sht) {
-  if (sht->height >= 0) sheet_updown(ctl, sht, -1);
+void sheet_free(struct SHEET *sht) {
+  if (sht->height >= 0) sheet_updown(sht, -1);
   sht->flags = 0;
 }

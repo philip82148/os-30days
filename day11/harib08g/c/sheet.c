@@ -43,13 +43,13 @@ void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, i
   sht->col_inv = col_inv;
 }
 
-void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
+void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1, int h0) {
   if (vx0 < 0) vx0 = 0;
   if (vy0 < 0) vy0 = 0;
   if (vx1 > ctl->xsize) vx1 = ctl->xsize;
   if (vy1 > ctl->ysize) vy1 = ctl->ysize;
 
-  for (int height = 0; height <= ctl->top; height++) {
+  for (int height = h0; height <= ctl->top; height++) {
     struct SHEET *sht = ctl->sheets[height];
     int sht_x0 = vx0 - sht->vx0;
     int sht_y0 = vy0 - sht->vy0;
@@ -69,6 +69,26 @@ void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
         }
       }
     }
+  }
+}
+
+void sheet_refresh(struct SHEET *sht, int sht_x0, int sht_y0, int sht_x1, int sht_y1) {
+  struct SHTCTL *ctl = sht->ctl;
+  if (sht->height >= 0)
+    sheet_refreshsub(
+        ctl, sht->vx0 + sht_x0, sht->vy0 + sht_y0, sht->vx0 + sht_x1, sht->vy0 + sht_y1, sht->height
+    );
+}
+
+void sheet_slide(struct SHEET *sht, int vx0, int vy0) {
+  struct SHTCTL *ctl = sht->ctl;
+  int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
+  sht->vx0 = vx0;
+  sht->vy0 = vy0;
+
+  if (sht->height >= 0) {
+    sheet_refreshsub(ctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize, 0);
+    sheet_refreshsub(ctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize, sht->height);
   }
 }
 
@@ -93,6 +113,9 @@ void sheet_updown(struct SHEET *sht, int height) {
         ctl->sheets[h]->height = h;
       }
       ctl->sheets[height] = sht;
+      sheet_refreshsub(
+          ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, height + 1
+      );
     } else {  // 非表示化
       if (ctl->top > old_height) {
         // 上になっているものをおろす
@@ -102,8 +125,8 @@ void sheet_updown(struct SHEET *sht, int height) {
         }
       }
       ctl->top--;  // 憑依中の下敷きが一つ減るので、一番上の高さが減る
+      sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, 0);
     }
-    sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
   } else if (old_height < height) {
     // 以前よりも高くなる
     // 上と同じ
@@ -121,27 +144,9 @@ void sheet_updown(struct SHEET *sht, int height) {
       ctl->sheets[height] = sht;
       ctl->top++;
     }
-    sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
-  }
-}
-
-void sheet_refresh(struct SHEET *sht, int sht_x0, int sht_y0, int sht_x1, int sht_y1) {
-  struct SHTCTL *ctl = sht->ctl;
-  if (sht->height >= 0)
     sheet_refreshsub(
-        ctl, sht->vx0 + sht_x0, sht->vy0 + sht_y0, sht->vx0 + sht_x1, sht->vy0 + sht_y1
+        ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, height
     );
-}
-
-void sheet_slide(struct SHEET *sht, int vx0, int vy0) {
-  struct SHTCTL *ctl = sht->ctl;
-  int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
-  sht->vx0 = vx0;
-  sht->vy0 = vy0;
-
-  if (sht->height >= 0) {
-    sheet_refreshsub(ctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize);
-    sheet_refreshsub(ctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize);
   }
 }
 

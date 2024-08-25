@@ -41,6 +41,11 @@ void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, i
 }
 
 void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1) {
+  if (vx0 < 0) vx0 = 0;
+  if (vy0 < 0) vy0 = 0;
+  if (vx1 > ctl->xsize) vx1 = ctl->xsize;
+  if (vy1 > ctl->ysize) vy1 = ctl->ysize;
+
   for (int height = 0; height <= ctl->top; height++) {
     struct SHEET *sht = ctl->sheets[height];
     int sht_x0 = vx0 - sht->vx0;

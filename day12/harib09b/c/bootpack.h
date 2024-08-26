@@ -26,6 +26,7 @@ void load_gdtr(int limit, int addr);
 void load_idtr(int limit, int addr);
 int load_cr0();
 void store_cr0(int cr0);
+void asm_inthandler20();
 void asm_inthandler21();
 void asm_inthandler27();
 void asm_inthandler2c();
@@ -179,3 +180,11 @@ void sheet_updown(struct SHEET *sht, int height);
 void sheet_refresh(struct SHEET *sht, int sht_x0, int sht_y0, int sht_x1, int sht_y1);
 void sheet_slide(struct SHEET *sht, int vx0, int vy0);
 void sheet_free(struct SHEET *sht);
+
+// sheet.c ----------------------------------------------------------------------------------------
+struct TIMERCTL {
+  unsigned int count;
+};
+extern struct TIMERCTL timerctl;
+void init_pit();
+void inthandler20(int *esp);

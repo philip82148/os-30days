@@ -51,6 +51,7 @@
     "sendready",
     "SHTCTL",
     "stihlt",
+    "timerctl",
     "updown",
     "upow",
     "vmode",

@@ -14,7 +14,8 @@ void HariMain() {
   unsigned char keybuf[32], mousebuf[128];
   fifo8_init(&keyfifo, 32, keybuf);
   fifo8_init(&mousefifo, 128, mousebuf);
-  io_out8(PIC0_IMR, 0xf9);  // Arrow PIC1&keyboard (11111001)
+  init_pit();
+  io_out8(PIC0_IMR, 0xf8);  // Arrow PIT&PIC1&keyboard (11111001)
   io_out8(PIC1_IMR, 0xef);  // Arrow mouse (11101111)
 
   // Keyboard & mouse
@@ -66,10 +67,8 @@ void HariMain() {
   putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
-  int count = 0;
   for (;;) {
-    count++;
-    my_sprintf(s, "%010d", count);
+    my_sprintf(s, "%010d", timerctl.count);
     boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
     putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
     sheet_refresh(sht_win, 40, 28, 120, 44);

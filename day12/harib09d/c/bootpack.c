@@ -30,6 +30,22 @@ void HariMain() {
   memman_free(memman, 0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
   memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
+  // Timer
+  struct FIFO8 timerfifo, timerfifo2, timerfifo3;
+  unsigned char timerbuf[8], timerbuf2[8], timerbuf3[8];
+  fifo8_init(&timerfifo, 8, timerbuf);
+  struct TIMER *timer = timer_alloc();
+  timer_init(timer, &timerfifo, 1);
+  timer_settime(timer, 1000);
+  fifo8_init(&timerfifo2, 8, timerbuf2);
+  struct TIMER *timer2 = timer_alloc();
+  timer_init(timer2, &timerfifo2, 1);
+  timer_settime(timer2, 300);
+  fifo8_init(&timerfifo3, 8, timerbuf3);
+  struct TIMER *timer3 = timer_alloc();
+  timer_init(timer3, &timerfifo3, 1);
+  timer_settime(timer3, 50);
+
   init_palette();
 
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
@@ -74,7 +90,9 @@ void HariMain() {
     sheet_refresh(sht_win, 40, 28, 120, 44);
 
     io_cli();  // 一旦割り込み禁止
-    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
+    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo)
+            + fifo8_status(&timerfifo2) + fifo8_status(&timerfifo3)
+        == 0) {
       io_sti();  // 割り込み許可
     } else {
       if (fifo8_status(&keyfifo) != 0) {
@@ -112,6 +130,28 @@ void HariMain() {
           sheet_refresh(sht_back, 0, 0, 80, 16);
           sheet_slide(sht_mouse, mx, my);
         }
+      } else if (fifo8_status(&timerfifo) != 0) {
+        int i = fifo8_get(&timerfifo);
+        io_sti();
+        putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
+        sheet_refresh(sht_back, 0, 64, 56, 80);
+      } else if (fifo8_status(&timerfifo2) != 0) {
+        int i = fifo8_get(&timerfifo2);
+        io_sti();
+        putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3[sec]");
+        sheet_refresh(sht_back, 0, 80, 48, 96);
+      } else if (fifo8_status(&timerfifo3) != 0) {
+        int i = fifo8_get(&timerfifo3);
+        io_sti();
+        if (i != 0) {
+          timer_init(timer3, &timerfifo3, 0);
+          boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+        } else {
+          timer_init(timer3, &timerfifo3, 1);
+          boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+        }
+        timer_settime(timer3, 50);
+        sheet_refresh(sht_back, 8, 96, 16, 112);
       }
     }
   }

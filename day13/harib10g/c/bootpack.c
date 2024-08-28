@@ -12,17 +12,18 @@ void HariMain() {
   init_pic();
   io_sti();  // 割り込み許可
 
-  unsigned char keybuf[32], mousebuf[128];
-  fifo8_init(&keyfifo, 32, keybuf);
-  fifo8_init(&mousefifo, 128, mousebuf);
+  struct FIFO32 fifo;
+  int fifobuf[128];
+  fifo32_init(&fifo, 128, fifobuf);
+
   init_pit();
   io_out8(PIC0_IMR, 0xf8);  // Arrow PIT&PIC1&keyboard (11111001)
   io_out8(PIC1_IMR, 0xef);  // Arrow mouse (11101111)
 
   // Keyboard & mouse
   struct MOUSE_DEC mdec;
-  init_keyboard();
-  enable_mouse(&mdec);
+  init_keyboard(&fifo, 256);
+  enable_mouse(&fifo, 512, &mdec);
 
   // Memory
   unsigned int memtotal = memtest(0x00400000, 0xbfffffff);
@@ -32,17 +33,14 @@ void HariMain() {
   memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
   // Timer
-  struct FIFO8 timerfifo;
-  unsigned char timerbuf[8];
-  fifo8_init(&timerfifo, 8, timerbuf);
   struct TIMER *timer = timer_alloc();
-  timer_init(timer, &timerfifo, 10);
+  timer_init(timer, &fifo, 10);
   timer_settime(timer, 1000);
   struct TIMER *timer2 = timer_alloc();
-  timer_init(timer2, &timerfifo, 3);
+  timer_init(timer2, &fifo, 3);
   timer_settime(timer2, 300);
   struct TIMER *timer3 = timer_alloc();
-  timer_init(timer3, &timerfifo, 1);
+  timer_init(timer3, &fifo, 1);
   timer_settime(timer3, 50);
 
   init_palette();
@@ -90,19 +88,16 @@ void HariMain() {
     // putfonts8_asc_sht(sht_back, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
 
     io_cli();  // 一旦割り込み禁止
-    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0) {
+    if (fifo32_status(&fifo) == 0) {
       io_sti();  // 割り込み許可
     } else {
-      if (fifo8_status(&keyfifo) != 0) {
-        int i = fifo8_get(&keyfifo);
-        io_sti();
-        my_sprintf(s, "%02X", i);
+      int data = fifo32_get(&fifo);
+      io_sti();
+      if (data >= 256 && data < 512) {  // Keyboard
+        my_sprintf(s, "%02X", data - 256);
         putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
-      } else if (fifo8_status(&mousefifo) != 0) {
-        int i = fifo8_get(&mousefifo);
-        io_sti();
-        // 3-byte of data chunked
-        if (mouse_decode(&mdec, i) != 0) {
+      } else if (data >= 512 && data < 768) {  // Mouse
+        if (mouse_decode(&mdec, data - 512) != 0) {
           my_sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
           if ((mdec.btn & 0x01) != 0) s[1] = 'L';
           if ((mdec.btn & 0x02) != 0) s[3] = 'R';
@@ -122,28 +117,22 @@ void HariMain() {
           putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
           sheet_slide(sht_mouse, mx, my);
         }
-      } else if (fifo8_status(&timerfifo) != 0) {
-        int i = fifo8_get(&timerfifo);
-        io_sti();
-        if (i == 10) {
-          putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
-          my_sprintf(s, "%010d", count);
-          putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
-        } else if (i == 3) {
-          putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
-          count = 0;
-        } else {  // 0 or 1
-          if (i != 0) {
-            timer_init(timer3, &timerfifo, 0);
-            boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
-          } else {
-            timer_init(timer3, &timerfifo, 1);
-            boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
-          }
-          timer_settime(timer3, 50);
-          sheet_refresh(sht_back, 8, 96, 16, 112);
-        }
+      } else if (data == 10) {  // 10 sec timer
+        putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
+        my_sprintf(s, "%010d", count);
+        putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
+      } else if (data == 3) {  // 3 sec timer
+        putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
+        count = 0;
+      } else if (data == 1) {  // Cursor timer
+        timer_init(timer3, &fifo, 0);
+        boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+      } else if (data == 0) {  // Cursor timer
+        timer_init(timer3, &fifo, 1);
+        boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
       }
+      timer_settime(timer3, 50);
+      sheet_refresh(sht_back, 8, 96, 16, 112);
     }
   }
 }

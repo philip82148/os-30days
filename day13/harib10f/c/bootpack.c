@@ -82,9 +82,12 @@ void HariMain() {
   putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
+  int count = 0;
   for (;;) {
-    my_sprintf(s, "%010d", timerctl.count);
-    putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
+    for (int i = 0; i < 10000; i++);
+    count++;
+    // my_sprintf(s, "%010d", count++);
+    // putfonts8_asc_sht(sht_back, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
 
     io_cli();  // 一旦割り込み禁止
     if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0) {
@@ -124,8 +127,11 @@ void HariMain() {
         io_sti();
         if (i == 10) {
           putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
+          my_sprintf(s, "%010d", count);
+          putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
         } else if (i == 3) {
           putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
+          count = 0;
         } else {  // 0 or 1
           if (i != 0) {
             timer_init(timer3, &timerfifo, 0);

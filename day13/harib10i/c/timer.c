@@ -17,11 +17,13 @@ void init_pit() {
   io_out8(PIT_CNT0, 0x9c);
   io_out8(PIT_CNT0, 0x2e);
   timerctl.count = 0;
+  for (int i = 0; i < MAX_TIMER; i++) timerctl.timers0[i].flags = 0;
+  struct TIMER *t = timer_alloc();
+  t->timeout = 0xffffffff;
+  t->flags = TIMER_FLAGS_USING;
+  t->next = 0;
+  timerctl.t0 = t;
   timerctl.next = 0xffffffff;  // No timer at first
-  timerctl.using_ = 0;
-  for (int i = 0; i < MAX_TIMER; i++) {
-    timerctl.timers0[i].flags = 0;  // Not in use
-  }
 }
 
 struct TIMER *timer_alloc() {
@@ -49,16 +51,6 @@ void timer_settime(struct TIMER *timer, unsigned int timeout) {
   int e = io_load_eflags();
   io_cli();
 
-  timerctl.using_++;
-  // Only one timer remained
-  if (timerctl.using_ == 1) {
-    timerctl.t0 = timer;
-    timer->next = 0;
-    timerctl.next = timer->timeout;
-    io_store_eflags(e);
-    return;
-  }
-
   struct TIMER *t = timerctl.t0;
   // Put into first
   if (timer->timeout <= t->timeout) {
@@ -83,11 +75,6 @@ void timer_settime(struct TIMER *timer, unsigned int timeout) {
       return;
     }
   }
-
-  // Put it at last
-  s->next = timer;
-  timer->next = 0;
-  io_store_eflags(e);
 }
 
 void inthandler20(int *esp) {
@@ -96,8 +83,7 @@ void inthandler20(int *esp) {
   if (timerctl.next > timerctl.count) return;
 
   struct TIMER *timer = timerctl.t0;  // Address of first timer
-  int i;
-  for (i = 0; i < timerctl.using_; i++) {
+  for (;;) {
     // Every timer is active
     if (timer->timeout > timerctl.count) break;
 
@@ -106,13 +92,6 @@ void inthandler20(int *esp) {
     fifo32_put(timer->fifo, timer->data);
     timer = timer->next;
   }
-
-  timerctl.using_ -= i;
   timerctl.t0 = timer;
-
-  if (timerctl.using_ > 0) {
-    timerctl.next = timerctl.t0->timeout;
-  } else {
-    timerctl.next = 0xffffffff;
-  }
+  timerctl.next = timerctl.t0->timeout;
 }

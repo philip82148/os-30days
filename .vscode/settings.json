@@ -53,6 +53,7 @@
     "sendready",
     "SHTCTL",
     "stihlt",
+    "textbox",
     "timerbuf",
     "timerctl",
     "timerfifo",

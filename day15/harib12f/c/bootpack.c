@@ -282,8 +282,11 @@ void task_b_main(struct SHEET *sht_back) {
   struct TIMER *timer_put = timer_alloc();
   timer_init(timer_put, &fifo, 1);
   timer_settime(timer_put, 1);
+  struct TIMER *timer_1s = timer_alloc();
+  timer_init(timer_1s, &fifo, 100);
+  timer_settime(timer_1s, 100);
 
-  int count = 0;
+  int count = 0, count0 = 0;
   for (;;) {
     for (int i = 0; i < 10000; i++);
     count++;
@@ -300,6 +303,11 @@ void task_b_main(struct SHEET *sht_back) {
       } else if (data == 2) {
         farjmp(0, 3 * 8);
         timer_settime(timer_ts, 2);
+      } else if (data == 100) {
+        my_sprintf(s, "%10d", count - count0);
+        putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+        count0 = count;
+        timer_settime(timer_1s, 100);
       }
     }
   }

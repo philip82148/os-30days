@@ -6,6 +6,7 @@
 
 void make_window8(unsigned char *buf, int xsize, int ysize, const char *title);
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, const char *s, int l);
+void set490(struct FIFO32 *fifo, int mode);
 
 void HariMain() {
   init_gdtidt();
@@ -33,6 +34,7 @@ void HariMain() {
   memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
   // Timer
+  set490(&fifo, 1);
   struct TIMER *timer = timer_alloc();
   timer_init(timer, &fifo, 10);
   timer_settime(timer, 1000);
@@ -188,4 +190,13 @@ void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, const char
   boxfill8(sht->buf, sht->bxsize, b, x, y, x + l * 8 - 1, y + 15);
   putfonts8_asc(sht->buf, sht->bxsize, x, y, c, s);
   sheet_refresh(sht, x, y, x + l * 8, y + 16);
+}
+
+void set490(struct FIFO32 *fifo, int mode) {
+  if (mode == 0) return;
+  for (int i = 0; i < 490; i++) {
+    struct TIMER *timer = timer_alloc();
+    timer_init(timer, fifo, 1024 + i);
+    timer_settime(timer, 100 * 60 * 60 * 24 * 50 + i * 100);
+  }
 }

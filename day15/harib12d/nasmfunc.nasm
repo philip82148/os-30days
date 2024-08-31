@@ -11,7 +11,7 @@
 	GLOBAL load_tr
 	GLOBAL asm_inthandler20, asm_inthandler21, asm_inthandler27, asm_inthandler2c
 	GLOBAL memtest_sub
-	GLOBAL taskswitch3,    taskswitch4
+	GLOBAL farjmp
 	EXTERN inthandler21, inthandler20, inthandler27, inthandler2c
 
 io_hlt: ; void io_hlt();
@@ -199,10 +199,6 @@ mts_fin:
 	POP EDI
 	RET
 
-taskswitch3: ; void taskswitch3();
-	JMP 3*8:0
-	RET
-
-taskswitch4: ; void taskswitch4();
-	JMP 4*8:0
+farjmp: ; void farjmp(int eip, int cs);
+	JMP FAR[ESP+4] ; cs:eip
 	RET

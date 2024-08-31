@@ -11,6 +11,7 @@
     "bysize",
     "cyls",
     "dsctbl",
+    "farjmp",
     "fifobuf",
     "FREEINFO",
     "gatedesc",

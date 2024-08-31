@@ -32,8 +32,7 @@ void asm_inthandler21();
 void asm_inthandler27();
 void asm_inthandler2c();
 unsigned int memtest_sub(unsigned int start, unsigned int end);
-void taskswitch3();
-void taskswitch4();
+void farjmp(int eip, int cs);
 
 // fifo.c -----------------------------------------------------------------------------------------
 struct FIFO32 {

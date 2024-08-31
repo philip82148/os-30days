@@ -120,7 +120,8 @@ void HariMain() {
         boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
         sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
       } else if (data >= 512 && data < 768) {  // Mouse
-        if (mouse_decode(&mdec, data - 512) != 0) {
+        data -= 512;
+        if (mouse_decode(&mdec, data) != 0) {
           my_sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
           if ((mdec.btn & 0x01) != 0) s[1] = 'L';
           if ((mdec.btn & 0x02) != 0) s[3] = 'R';
@@ -139,6 +140,7 @@ void HariMain() {
           my_sprintf(s, "(%3d, %3d)", mx, my);
           putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
           sheet_slide(sht_mouse, mx, my);
+          if ((mdec.btn) & 0x01) sheet_slide(sht_win, mx - 80, my - 8);
         }
       } else if (data == 10) {  // 10 sec timer
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);

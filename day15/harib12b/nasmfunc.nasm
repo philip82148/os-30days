@@ -8,8 +8,10 @@
     GLOBAL io_load_eflags, io_store_eflags
     GLOBAL load_gdtr,      load_idtr
 	GLOBAL load_cr0,       store_cr0
+	GLOBAL load_tr
 	GLOBAL asm_inthandler20, asm_inthandler21, asm_inthandler27, asm_inthandler2c
 	GLOBAL memtest_sub
+	GLOBAL taskswitch3,    taskswitch4
 	EXTERN inthandler21, inthandler20, inthandler27, inthandler2c
 
 io_hlt: ; void io_hlt();
@@ -87,16 +89,20 @@ load_idtr: ; void load_idtr(int limit, int addr);
 	LIDT [ESP+6]
 	RET
 
-load_cr0:
+load_cr0: ; int load_cr0();
 	MOV EAX, CR0
 	RET
 
-store_cr0:
+store_cr0: ; void store_cr0(int cr0);
 	MOV EAX, [ESP+4]
 	MOV CR0, EAX
 	RET
 
-asm_inthandler20:
+load_tr: ; void load_tr(int tr);
+	LTR [ESP+4]
+	RET
+
+asm_inthandler20: ; void asm_inthandler20();
 	PUSH ES
 	PUSH DS
 	PUSHAD
@@ -112,7 +118,7 @@ asm_inthandler20:
 	POP  ES
 	IRETD
 
-asm_inthandler21:
+asm_inthandler21: ; void asm_inthandler21();
 	PUSH ES
 	PUSH DS
 	PUSHAD
@@ -128,7 +134,7 @@ asm_inthandler21:
 	POP  ES
 	IRETD
 
-asm_inthandler27:
+asm_inthandler27: ; void asm_inthandler27();
 	PUSH ES
 	PUSH DS
 	PUSHAD
@@ -144,7 +150,7 @@ asm_inthandler27:
 	POP  ES
 	IRETD
 
-asm_inthandler2c:
+asm_inthandler2c: ; void asm_inthandler2c();
 	PUSH ES
 	PUSH DS
 	PUSHAD
@@ -160,7 +166,7 @@ asm_inthandler2c:
 	POP  ES
 	IRETD
 
-memtest_sub:
+memtest_sub: ; unsigned int memtest_sub(unsigned int start, unsigned int end);
 	PUSH EDI             ; For (EBX,ESI,EDI)
 	PUSH ESI
 	PUSH EBX
@@ -191,4 +197,12 @@ mts_fin:
 	POP EBX
 	POP ESI
 	POP EDI
+	RET
+
+taskswitch3: ; void taskswitch3();
+	JMP 3*8:0
+	RET
+
+taskswitch4: ; void taskswitch4();
+	JMP 4*8:0
 	RET

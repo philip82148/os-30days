@@ -275,8 +275,7 @@ void task_b_main() {
   for (;;) {
     io_cli();
     if (fifo32_status(&fifo) == 0) {
-      io_sti();
-      io_hlt();
+      io_stihlt();
     } else {
       int data = fifo32_get(&fifo);
       io_sti();

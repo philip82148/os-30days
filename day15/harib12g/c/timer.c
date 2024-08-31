@@ -83,15 +83,21 @@ void inthandler20(int *esp) {
   if (timerctl.next > timerctl.count) return;
 
   struct TIMER *timer = timerctl.t0;  // Address of first timer
+  char ts = 0;
   for (;;) {
-    // Every timer is active
-    if (timer->timeout > timerctl.count) break;
+    if (timerctl.count < timer->timeout) break;
 
     // Timeout
     timer->flags = TIMER_FLAGS_ALLOC;
-    fifo32_put(timer->fifo, timer->data);
-    timer = timer->next;
+    if (timer == mt_timer) {
+      ts = 1;  // mt_timerがタイムアウトした
+    } else {
+      fifo32_put(timer->fifo, timer->data);
+    }
+    timer = timer->next;  // 次のタイマの番地をtimerに代入
   }
   timerctl.t0 = timer;
   timerctl.next = timerctl.t0->timeout;
+
+  if (ts) mt_taskswitch();
 }

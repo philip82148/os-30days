@@ -43,6 +43,7 @@
     "MOUSECMD",
     "mousedata",
     "mousefifo",
+    "mtask",
     "nasmfunc",
     "putblock",
     "putfont",

@@ -17,11 +17,13 @@ void init_pit() {
   io_out8(PIT_CNT0, 0x9c);
   io_out8(PIT_CNT0, 0x2e);
   timerctl.count = 0;
+  for (int i = 0; i < MAX_TIMER; i++) timerctl.timers0[i].flags = 0;
+  struct TIMER *t = timer_alloc();
+  t->timeout = 0xffffffff;
+  t->flags = TIMER_FLAGS_USING;
+  t->next = 0;
+  timerctl.t0 = t;
   timerctl.next = 0xffffffff;  // No timer at first
-  timerctl.using_ = 0;
-  for (int i = 0; i < MAX_TIMER; i++) {
-    timerctl.timers0[i].flags = 0;  // Not in use
-  }
 }
 
 struct TIMER *timer_alloc() {
@@ -38,7 +40,7 @@ void timer_free(struct TIMER *timer) {
   timer->flags = 0;  // Not in use
 }
 
-void timer_init(struct TIMER *timer, struct FIFO32 *fifo, unsigned char data) {
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data) {
   timer->fifo = fifo;
   timer->data = data;
 }
@@ -49,24 +51,30 @@ void timer_settime(struct TIMER *timer, unsigned int timeout) {
   int e = io_load_eflags();
   io_cli();
 
+  struct TIMER *t = timerctl.t0;
+  // Put into first
+  if (timer->timeout <= t->timeout) {
+    timerctl.t0 = timer;
+    timer->next = t;
+    timerctl.next = timer->timeout;
+    io_store_eflags(e);
+    return;
+  }
+
   // Search where to insert
-  int i;
-  for (i = 0; i < timerctl.using_; i++) {
-    if (timerctl.timers[i]->timeout >= timer->timeout) {
-      break;
+  struct TIMER *s;
+  for (;;) {
+    s = t;
+    t = t->next;
+    if (t == 0) break;  // End up last
+    // insert between s and t
+    if (timer->timeout <= t->timeout) {
+      s->next = timer;
+      timer->next = t;
+      io_store_eflags(e);
+      return;
     }
   }
-
-  // Adjust latters
-  for (int j = timerctl.using_; j > i; j--) {
-    timerctl.timers[j] = timerctl.timers[j - 1];
-  }
-  timerctl.using_++;
-  // Insert between
-
-  timerctl.timers[i] = timer;
-  timerctl.next = timerctl.timers[0]->timeout;
-  io_store_eflags(e);
 }
 
 void inthandler20(int *esp) {
@@ -74,22 +82,16 @@ void inthandler20(int *esp) {
   timerctl.count++;
   if (timerctl.next > timerctl.count) return;
 
-  int i = 0;
-  for (i = 0; i < timerctl.using_; i++) {
+  struct TIMER *timer = timerctl.t0;  // Address of first timer
+  for (;;) {
     // Every timer is active
-    if (timerctl.timers[i]->timeout > timerctl.count) break;
+    if (timer->timeout > timerctl.count) break;
 
     // Timeout
-    timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC;
-    fifo32_put(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
+    timer->flags = TIMER_FLAGS_ALLOC;
+    fifo32_put(timer->fifo, timer->data);
+    timer = timer->next;
   }
-
-  // i timers went timeout, adjust remains
-  timerctl.using_ -= i;
-  for (int j = 0; j < timerctl.using_; j++) timerctl.timers[j] = timerctl.timers[i + j];
-  if (timerctl.using_ > 0) {
-    timerctl.next = timerctl.timers[0]->timeout;
-  } else {
-    timerctl.next = 0xffffffff;
-  }
+  timerctl.t0 = timer;
+  timerctl.next = timerctl.t0->timeout;
 }

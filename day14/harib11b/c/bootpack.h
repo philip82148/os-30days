@@ -185,13 +185,14 @@ void sheet_free(struct SHEET *sht);
 #define MAX_TIMER 500
 
 struct TIMER {
+  struct TIMER *next;
   unsigned int timeout, flags;
   struct FIFO32 *fifo;
-  unsigned char data;
+  int data;
 };
 struct TIMERCTL {
   unsigned int count, next, using_;
-  struct TIMER *timers[MAX_TIMER];
+  struct TIMER *t0;
   struct TIMER timers0[MAX_TIMER];
 };
 extern struct TIMERCTL timerctl;
@@ -199,6 +200,6 @@ extern struct TIMERCTL timerctl;
 void init_pit();
 struct TIMER *timer_alloc();
 void timer_free(struct TIMER *timer);
-void timer_init(struct TIMER *timer, struct FIFO32 *fifo, unsigned char data);
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
 void inthandler20(int *esp);

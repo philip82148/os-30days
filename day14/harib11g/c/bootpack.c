@@ -8,6 +8,14 @@ void make_window8(unsigned char *buf, int xsize, int ysize, const char *title);
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, const char *s, int l);
 
 void HariMain() {
+  static char keytable[0x54] = {
+      0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,   'Q',
+      'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S', 'D', 'F',
+      'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V', 'B', 'N', 'M',
+      ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.',
+  };
+
   init_gdtidt();
   init_pic();
   io_sti();  // 割り込み許可
@@ -16,14 +24,14 @@ void HariMain() {
   int fifobuf[128];
   fifo32_init(&fifo, 128, fifobuf);
 
-  init_pit();
-  io_out8(PIC0_IMR, 0xf8);  // Arrow PIT&PIC1&keyboard (11111001)
-  io_out8(PIC1_IMR, 0xef);  // Arrow mouse (11101111)
-
-  // Keyboard & mouse
+  // Init PIT(Timer), Keyboard & mouse
   struct MOUSE_DEC mdec;
+  init_pit();
   init_keyboard(&fifo, 256);
   enable_mouse(&fifo, 512, &mdec);
+
+  io_out8(PIC0_IMR, 0xf8);  // Arrow PIT&PIC1&keyboard (11111001)
+  io_out8(PIC1_IMR, 0xef);  // Arrow mouse (11101111)
 
   // Memory
   unsigned int memtotal = memtest(0x00400000, 0xbfffffff);
@@ -62,7 +70,7 @@ void HariMain() {
 
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99);
-  make_window8(buf_win, 160, 68, "counter");
+  make_window8(buf_win, 160, 68, "window");
   sheet_slide(sht_back, 0, 0);
 
   // Centering in screen
@@ -80,22 +88,23 @@ void HariMain() {
   putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
-  int count = 0;
   for (;;) {
-    for (int i = 0; i < 10000; i++);
-    count++;
-    // my_sprintf(s, "%010d", count++);
-    // putfonts8_asc_sht(sht_back, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
-
     io_cli();  // 一旦割り込み禁止
     if (fifo32_status(&fifo) == 0) {
-      io_sti();  // 割り込み許可
+      io_stihlt();  // 割り込み許可
     } else {
       int data = fifo32_get(&fifo);
       io_sti();
       if (data >= 256 && data < 512) {  // Keyboard
         my_sprintf(s, "%02X", data - 256);
         putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
+        if (data < 256 + 0x54) {
+          if (keytable[data - 256] != 0) {
+            s[0] = keytable[data - 256];
+            s[1] = 0;
+            putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 1);
+          }
+        }
       } else if (data >= 512 && data < 768) {  // Mouse
         if (mouse_decode(&mdec, data - 512) != 0) {
           my_sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
@@ -119,11 +128,8 @@ void HariMain() {
         }
       } else if (data == 10) {  // 10 sec timer
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
-        my_sprintf(s, "%010d", count);
-        putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
       } else if (data == 3) {  // 3 sec timer
         putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
-        count = 0;
       } else if (data == 1) {  // Cursor timer
         timer_init(timer3, &fifo, 0);
         boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);

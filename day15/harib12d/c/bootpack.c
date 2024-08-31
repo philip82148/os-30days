@@ -278,7 +278,7 @@ void task_b_main() {
 
   struct TIMER *timer_ts = timer_alloc();
   timer_init(timer_ts, &fifo, 1);
-  timer_settime(timer_ts, 500);
+  timer_settime(timer_ts, 2);
   struct SHEET *sht_back = (struct SHEET *)*((int *)0x0fec);
 
   int count = 0;

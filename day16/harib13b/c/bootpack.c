@@ -25,7 +25,7 @@ void HariMain() {
 
   struct FIFO32 fifo;
   int fifobuf[128];
-  fifo32_init(&fifo, 128, fifobuf);
+  fifo32_init(&fifo, 128, fifobuf, 0);
 
   // Init PIT(Timer), Keyboard & mouse
   struct MOUSE_DEC mdec;
@@ -93,7 +93,9 @@ void HariMain() {
   putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
-  task_init(memman);
+  struct TASK *task_a = task_init(memman);
+  fifo.task = task_a;
+
   struct TASK *task_b = task_alloc();
   task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
   task_b->tss.eip = (int)&task_b_main;
@@ -109,7 +111,8 @@ void HariMain() {
   for (;;) {
     io_cli();  // 一旦割り込み禁止
     if (fifo32_status(&fifo) == 0) {
-      io_stihlt();  // 割り込み許可
+      task_sleep(task_a);
+      io_sti();  // 割り込み許可
     } else {
       int data = fifo32_get(&fifo);
       io_sti();
@@ -245,7 +248,7 @@ void task_b_main(struct SHEET *sht_back) {
 
   struct FIFO32 fifo;
   int fifobuf[128];
-  fifo32_init(&fifo, 128, fifobuf);
+  fifo32_init(&fifo, 128, fifobuf, 0);
 
   struct TIMER *timer_put = timer_alloc();
   timer_init(timer_put, &fifo, 1);

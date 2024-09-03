@@ -58,6 +58,8 @@
     "sendready",
     "SHTCTL",
     "stihlt",
+    "taskctl",
+    "TASKCTL",
     "taskswitch",
     "textbox",
     "timerbuf",

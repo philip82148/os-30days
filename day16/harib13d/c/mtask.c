@@ -17,6 +17,7 @@ struct TASK *task_init(struct MEMMAN *memman) {
   }
   struct TASK *task = task_alloc();
   task->flags = 2;  // Running task mark
+  task->priority = 2;
   taskctl->running = 1;
   taskctl->now = 0;
   taskctl->tasks[0] = task;
@@ -53,19 +54,25 @@ struct TASK *task_alloc() {
   return 0;  // Reaching max tasks
 }
 
-void task_run(struct TASK *task) {
+void task_run(struct TASK *task, int priority) {
+  if (priority > 0) task->priority = priority;
+
+  if (task->flags == 2) return;
   task->flags = 2;  // Running mark
   taskctl->tasks[taskctl->running] = task;
   taskctl->running++;
 }
 
 void task_switch() {
-  timer_settime(task_timer, 2);
-  if (taskctl->running >= 2) {
-    taskctl->now++;
-    if (taskctl->now == taskctl->running) taskctl->now = 0;
-    farjmp(0, taskctl->tasks[taskctl->now]->sel);
+  taskctl->now++;
+  if (taskctl->now == taskctl->running) {
+    taskctl->now = 0;
   }
+
+  struct TASK *task = taskctl->tasks[taskctl->now];
+  timer_settime(task_timer, task->priority);
+
+  if (taskctl->running >= 2) farjmp(0, taskctl->tasks[taskctl->now]->sel);
 }
 
 void task_sleep(struct TASK *task) {

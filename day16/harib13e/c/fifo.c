@@ -26,7 +26,8 @@ int fifo32_put(struct FIFO32 *fifo, int data) {
   if (fifo->p == fifo->size) fifo->p = 0;
   fifo->free--;
   if (fifo->task != 0) {
-    if (fifo->task->flags != 2) task_run(fifo->task, 0);
+    // If the task is sleeping,
+    if (fifo->task->flags != 2) task_run(fifo->task, -1, 0);  // Wake that up
   }
   return 0;
 }

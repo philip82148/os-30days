@@ -209,8 +209,10 @@ void timer_settime(struct TIMER *timer, unsigned int timeout);
 void inthandler20(int *esp);
 
 // mtask.c ----------------------------------------------------------------------------------------
-#define MAX_TASKS 1000
-#define TASK_GDT0 3  // Number allocated from GDT to TSS
+#define MAX_TASKS      1000
+#define TASK_GDT0      3  // Number allocated from GDT to TSS
+#define MAX_TASKS_LV   100
+#define MAX_TASKLEVELS 10
 
 struct TSS32 {
   int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
@@ -218,21 +220,29 @@ struct TSS32 {
   int es, cs, ss, ds, fs, gs;
   int ldtr, iomap;
 };
+
 struct TASK {
   int sel, flags;
-  int priority;
+  int level, priority;
   struct TSS32 tss;
 };
+
+struct TASKLEVEL {
+  int running;
+  int now;
+  struct TASK *tasks[MAX_TASKS_LV];
+};
+
 struct TASKCTL {
-  int running;  // Number of tasks running
-  int now;      // Task currently running
-  struct TASK *tasks[MAX_TASKS];
+  int now_lv;      // Level of current running task
+  char lv_change;  // Shout it change level at next switch
+  struct TASKLEVEL level[MAX_TASKLEVELS];
   struct TASK tasks0[MAX_TASKS];
 };
 
 extern struct TIMER *task_timer;
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc();
-void task_run(struct TASK *task, int priority);
+void task_run(struct TASK *task, int level, int priority);
 void task_switch();
 void task_sleep(struct TASK *task);

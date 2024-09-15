@@ -2,7 +2,7 @@
 
 cd ./scripts/..
 
-for f in ./*/*/Makefile; do
+for f in ./*/*/*/Makefile; do
     dir=$(dirname $f)
     echo "running $dir..."
     cd $dir &&

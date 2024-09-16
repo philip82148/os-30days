@@ -118,7 +118,7 @@ void HariMain() {
   my_sprintf(s, "memory %dMB  free : %dKB", memtotal / (1024 * 1024), memman_total(memman) / 1024);
   putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, 40);
 
-  int key_to = 0, key_shift = 0;
+  int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7;
 
   for (;;) {
     io_cli();  // 一旦割り込み禁止
@@ -140,6 +140,11 @@ void HariMain() {
           }
         } else {
           s[0] = 0;
+        }
+        if ('A' <= s[0] && s[0] <= 'Z') {  // To lowercase
+          if (((key_leds & 4) == 0 && key_shift == 0) || ((key_leds & 4) != 0 && key_shift != 0)) {
+            s[0] += 0x20;
+          }
         }
         if (s[0] != 0) {      // Normal letter
           if (key_to == 0) {  // To task_a

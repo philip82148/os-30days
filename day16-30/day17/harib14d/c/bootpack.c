@@ -96,7 +96,7 @@ void HariMain() {
 
   sheet_slide(sht_back, 0, 0);
   sheet_slide(sht_cons, 32, 4);
-  sheet_slide(sht_win, 8, 56);
+  sheet_slide(sht_win, 64, 56);
   sheet_slide(sht_mouse, mx, my);
 
   sheet_updown(sht_back, 0);
@@ -122,19 +122,29 @@ void HariMain() {
         data -= 256;
         my_sprintf(s, "%02X", data);
         putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
-        if (data < 0x54) {  // Normal letter
-          if (keytable[data] != 0 && cursor_x < 144) {
-            s[0] = keytable[data];
-            s[1] = 0;
-            putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
-            cursor_x += 8;
+        if (data < 0x54 && keytable[data] != 0) {  // Normal letter
+          if (key_to == 0) {                       // To task_a
+            if (cursor_x < 128) {
+              s[0] = keytable[data];
+              s[1] = 0;
+              putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+              cursor_x += 8;
+            }
+          } else {  // To console
+            fifo32_put(&task_cons->fifo, keytable[data] + 256);
           }
         }
-        if (data == 0x0e && cursor_x > 8) {  // Backspace
-          putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
-          cursor_x -= 8;
+        if (data == 0x0e) {   // Backspace
+          if (key_to == 0) {  // To task_a
+            if (cursor_x > 8) {
+              putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+              cursor_x -= 8;
+            }
+          } else {
+            fifo32_put(&task_cons->fifo, 8 + 256);
+          }
         }
-        if (data == 0x0f) {
+        if (data == 0x0f) {  // Tab
           if (key_to == 0) {
             key_to = 1;
             make_wtitle8(buf_win, sht_win->bxsize, "task_a", 0);
@@ -218,7 +228,7 @@ void make_wtitle8(unsigned char *buf, int xsize, const char *title, char act) {
       "OQQQQQQQQQQQQQ$@",
       "OQQQQQQQQQQQQQ$@",
       "O$$$$$$$$$$$$$$@",
-      "@@@@@@@@@@@@@@@@"
+      "@@@@@@@@@@@@@@@@",
   };
 
   char tc, tbc;
@@ -270,35 +280,54 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c) {
 
 void console_task(struct SHEET *sheet) {
   struct TASK *task = task_now();
-  struct FIFO32 fifo;
   int fifobuf[128];
-  fifo32_init(&fifo, 128, fifobuf, task);
+  fifo32_init(&task->fifo, 128, fifobuf, task);
 
   struct TIMER *timer = timer_alloc();
-  timer_init(timer, &fifo, 1);
+  timer_init(timer, &task->fifo, 1);
   timer_settime(timer, 50);
 
-  int cursor_x = 8, cursor_c = COL8_000000;
+  // Display prompt
+  putfonts8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
+
+  int cursor_x = 16, cursor_c = COL8_000000;
   for (;;) {
     io_cli();
-    if (fifo32_status(&fifo) == 0) {
+    if (fifo32_status(&task->fifo) == 0) {
       task_sleep(task);
       io_sti();
     } else {
-      int data = fifo32_get(&fifo);
+      int data = fifo32_get(&task->fifo);
       io_sti();
       if (data <= 1) {  // Timer for cursor
         if (data != 0) {
-          timer_init(timer, &fifo, 0);
+          timer_init(timer, &task->fifo, 0);
           cursor_c = COL8_FFFFFF;
         } else {
-          timer_init(timer, &fifo, 1);
+          timer_init(timer, &task->fifo, 1);
           cursor_c = COL8_000000;
         }
         timer_settime(timer, 50);
-        boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
-        sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
       }
+      if (256 <= data && data <= 511) {  // Keyboard data from task_a
+        data -= 256;
+        if (data == 8) {  // Backspace
+          if (cursor_x > 16) {
+            putfonts8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, " ", 1);
+            cursor_x -= 8;
+          }
+        } else {  // Normal letter
+          if (cursor_x < 240) {
+            char s[2];
+            s[0] = data;
+            s[1] = 0;
+            putfonts8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, s, 1);
+            cursor_x += 8;
+          }
+        }
+      }
+      boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+      sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
     }
   }
 }

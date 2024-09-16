@@ -4,6 +4,8 @@
 
 #include "bootpack.h"
 
+#define KEYCMD_LED 0xed
+
 void make_window8(unsigned char *buf, int xsize, int ysize, const char *title, char act);
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, const char *s, int l);
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);
@@ -46,6 +48,9 @@ void HariMain() {
 
   io_out8(PIC0_IMR, 0xf8);  // Arrow PIT&PIC1&keyboard (11111001)
   io_out8(PIC1_IMR, 0xef);  // Arrow mouse (11101111)
+  struct FIFO32 keycmd;
+  int keycmd_buf[32];
+  fifo32_init(&keycmd, 128, fifobuf, 0);
 
   // Memory
   unsigned int memtotal = memtest(0x00400000, 0xbfffffff);
@@ -118,9 +123,19 @@ void HariMain() {
   my_sprintf(s, "memory %dMB  free : %dKB", memtotal / (1024 * 1024), memman_total(memman) / 1024);
   putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, 40);
 
-  int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7;
+  int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
+
+  // 最初にキーボード状態との食い違いがないように設定する
+  fifo32_put(&keycmd, KEYCMD_LED);
+  fifo32_put(&keycmd, key_leds);
 
   for (;;) {
+    if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
+      // キーボードコントローラに送るデーがあれば送る
+      keycmd_wait = fifo32_get(&keycmd);
+      wait_KBC_sendready();
+      io_out8(PORT_KEYDAT, keycmd_wait);
+    }
     io_cli();  // 一旦割り込み禁止
     if (fifo32_status(&fifo) == 0) {
       task_sleep(task_a);
@@ -184,6 +199,23 @@ void HariMain() {
         if (data == 0x36) key_shift |= 2;   // Right shift ON
         if (data == 0xaa) key_shift &= ~1;  // Left shift OFF
         if (data == 0xb6) key_shift &= ~2;  // Right shift OFF
+        if (data == 0x3a) {                 // CapsLock
+          key_leds ^= 4;
+          fifo32_put(&keycmd, KEYCMD_LED);
+          fifo32_put(&keycmd, key_leds);
+        }
+        if (data == 0x45) {  // ScrollLock
+          key_leds ^= 1;
+          fifo32_put(&keycmd, KEYCMD_LED);
+          fifo32_put(&keycmd, key_leds);
+        }
+        if (data == 0xfa) {
+          keycmd_wait = -1;
+        }  // Keyboard received data
+        if (data == 0xfe) {  // Keyboard didn't receive
+          wait_KBC_sendready();
+          io_out8(PORT_KEYDAT, keycmd_wait);
+        }
         // Cursor re-render
         boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
         sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);

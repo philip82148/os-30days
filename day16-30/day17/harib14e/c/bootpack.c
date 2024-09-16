@@ -11,12 +11,22 @@ void make_wtitle8(unsigned char *buf, int xsize, const char *title, char act);
 void console_task(struct SHEET *sheet);
 
 void HariMain() {
-  static char keytable[0x54] = {
+  static char keytable0[0x54] = {
       0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,   'Q',
       'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S', 'D', 'F',
       'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V', 'B', 'N', 'M',
       ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.',
+  };
+  static char keytable1[0x80] = {
+      0,   0,   '!', 0x22, '#', '$', '%', '&', 0x27, '(', ')', '~', '=', '~', 0,   0,
+      'Q', 'W', 'E', 'R',  'T', 'Y', 'U', 'I', 'O',  'P', '`', '{', 0,   0,   'A', 'S',
+      'D', 'F', 'G', 'H',  'J', 'K', 'L', '+', '*',  0,   0,   '}', 'Z', 'X', 'C', 'V',
+      'B', 'N', 'M', '<',  '>', '?', 0,   '*', 0,    ' ', 0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,    0,   0,   0,   '7', '8',  '9', '-', '4', '5', '6', '+', '1',
+      '2', '3', '0', '.',  0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,    0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   '_',  0,   0,   0,   0,   0,    0,   0,   0,   0,   '|', 0,   0,
   };
   char s[40];
 
@@ -108,7 +118,7 @@ void HariMain() {
   my_sprintf(s, "memory %dMB  free : %dKB", memtotal / (1024 * 1024), memman_total(memman) / 1024);
   putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, 40);
 
-  int key_to = 0;
+  int key_to = 0, key_shift = 0;
 
   for (;;) {
     io_cli();  // 一旦割り込み禁止
@@ -122,16 +132,24 @@ void HariMain() {
         data -= 256;
         my_sprintf(s, "%02X", data);
         putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
-        if (data < 0x54 && keytable[data] != 0) {  // Normal letter
-          if (key_to == 0) {                       // To task_a
+        if (data < 0x80) {
+          if (key_shift == 0) {
+            s[0] = keytable0[data];
+          } else {
+            s[0] = keytable1[data];
+          }
+        } else {
+          s[0] = 0;
+        }
+        if (s[0] != 0) {      // Normal letter
+          if (key_to == 0) {  // To task_a
             if (cursor_x < 128) {
-              s[0] = keytable[data];
               s[1] = 0;
               putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
               cursor_x += 8;
             }
           } else {  // To console
-            fifo32_put(&task_cons->fifo, keytable[data] + 256);
+            fifo32_put(&task_cons->fifo, s[0] + 256);
           }
         }
         if (data == 0x0e) {   // Backspace
@@ -157,6 +175,10 @@ void HariMain() {
           sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
           sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
         }
+        if (data == 0x2a) key_shift |= 1;   // Left shift ON
+        if (data == 0x36) key_shift |= 2;   // Right shift ON
+        if (data == 0xaa) key_shift &= ~1;  // Left shift OFF
+        if (data == 0xb6) key_shift &= ~2;  // Right shift OFF
         // Cursor re-render
         boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
         sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);

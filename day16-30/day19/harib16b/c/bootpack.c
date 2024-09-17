@@ -435,8 +435,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
               }
             }
             cursor_y = cons_newline(cursor_y, sheet);
-          } else if (cmdline[0] == 't' && cmdline[1] == 'y' && cmdline[2] == 'p'
-                     && cmdline[3] == 'e' && cmdline[4] == ' ') {  // "type"
+          } else if (my_strncmp(cmdline, "type ", 5) == 0) {
             // Prepare filename
             for (int y = 0; y < 11; y++) s[y] = ' ';
             for (int x = 5, y = 0; y < 11 && cmdline[x] != 0; x++) {
@@ -475,11 +474,28 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
               for (x = 0; x < y; x++) {
                 s[0] = p[x];
                 s[1] = 0;
-                putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
-                cursor_x += 8;
-                if (cursor_x == 8 + 240) {
+                if (s[0] == 0x09) {  // tab
+                  for (;;) {
+                    putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+                    cursor_x += 8;
+                    if (cursor_x == 8 + 240) {
+                      cursor_x = 8;
+                      cursor_y = cons_newline(cursor_y, sheet);
+                    }
+                    if (((cursor_x - 8) & 0x1f) == 0) break;
+                  }
+                } else if (s[0] == 0x0a) {  // New-link
                   cursor_x = 8;
                   cursor_y = cons_newline(cursor_y, sheet);
+                } else if (s[0] == 0x0d) {  // Return
+                                            // Do nothing the moment
+                } else {                    // Normal letter
+                  putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
+                  cursor_x += 8;
+                  if (cursor_x == 8 + 240) {
+                    cursor_x = 8;
+                    cursor_y = cons_newline(cursor_y, sheet);
+                  }
                 }
               }
             } else {  // Didn't find the file

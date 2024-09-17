@@ -187,10 +187,15 @@ void HariMain() {
             key_to = 1;
             make_wtitle8(buf_win, sht_win->bxsize, "task_a", 0);
             make_wtitle8(buf_cons, sht_cons->bxsize, "console", 1);
+            cursor_c = -1;  // Hide cursor
+            boxfill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cursor_x, 28, cursor_x + 7, 43);
+            fifo32_put(&task_cons->fifo, 2);  // Console cursor ON
           } else {
             key_to = 0;
             make_wtitle8(buf_win, sht_win->bxsize, "task_a", 1);
             make_wtitle8(buf_cons, sht_cons->bxsize, "console", 0);
+            cursor_c = COL8_000000;           // Show cursor
+            fifo32_put(&task_cons->fifo, 3);  // Console cursor OFF
           }
           sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
           sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
@@ -216,8 +221,10 @@ void HariMain() {
           wait_KBC_sendready();
           io_out8(PORT_KEYDAT, keycmd_wait);
         }
+        // Show cursor again
+        if (cursor_c >= 0)
+          boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
         // Cursor re-render
-        boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
         sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
       } else if (data >= 512 && data < 768) {  // Mouse
         data -= 512;
@@ -245,14 +252,16 @@ void HariMain() {
       } else if (data <= 1) {  // Cursor timer
         if (data) {
           timer_init(timer, &fifo, 0);
-          cursor_c = COL8_000000;
+          if (cursor_c >= 0) cursor_c = COL8_000000;
         } else {
           timer_init(timer, &fifo, 1);
-          cursor_c = COL8_FFFFFF;
+          if (cursor_c >= 0) cursor_c = COL8_FFFFFF;
         }
         timer_settime(timer, 50);
-        boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
-        sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
+        if (cursor_c >= 0) {
+          boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+          sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
+        }
       }
     }
   }
@@ -349,7 +358,7 @@ void console_task(struct SHEET *sheet) {
   // Display prompt
   putfonts8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
 
-  int cursor_x = 16, cursor_c = COL8_000000;
+  int cursor_x = 16, cursor_c = -1;
   for (;;) {
     io_cli();
     if (fifo32_status(&task->fifo) == 0) {
@@ -359,14 +368,19 @@ void console_task(struct SHEET *sheet) {
       int data = fifo32_get(&task->fifo);
       io_sti();
       if (data <= 1) {  // Timer for cursor
-        if (data != 0) {
+        if (data) {
           timer_init(timer, &task->fifo, 0);
-          cursor_c = COL8_FFFFFF;
+          if (cursor_c >= 0) cursor_c = COL8_FFFFFF;
         } else {
           timer_init(timer, &task->fifo, 1);
-          cursor_c = COL8_000000;
+          if (cursor_c >= 0) cursor_c = COL8_000000;
         }
         timer_settime(timer, 50);
+      }
+      if (data == 2) cursor_c = COL8_FFFFFF;  // Cursor ON
+      if (data == 3) {                        // Cursor OFF
+        boxfill8(sheet->buf, sheet->bxsize, COL8_000000, cursor_x, 28, cursor_x + 7, 43);
+        cursor_c = -1;
       }
       if (256 <= data && data <= 511) {  // Keyboard data from task_a
         data -= 256;
@@ -385,7 +399,8 @@ void console_task(struct SHEET *sheet) {
           }
         }
       }
-      boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+      if (cursor_c >= 0)
+        boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
       sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
     }
   }

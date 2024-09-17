@@ -435,6 +435,60 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
               }
             }
             cursor_y = cons_newline(cursor_y, sheet);
+          } else if (cmdline[0] == 't' && cmdline[1] == 'y' && cmdline[2] == 'p'
+                     && cmdline[3] == 'e' && cmdline[4] == ' ') {  // "type"
+            // Prepare filename
+            for (int y = 0; y < 11; y++) s[y] = ' ';
+            for (int x = 5, y = 0; y < 11 && cmdline[x] != 0; x++) {
+              if (cmdline[x] == '.' && y <= 8) {
+                y = 8;
+              } else {
+                s[y] = cmdline[x];
+                // lowercase to uppercase
+                if ('a' <= s[y] && s[y] <= 'z') {
+                  s[y] -= 0x20;
+                }
+                y++;
+              }
+            }
+            // Look for the file
+            int x;
+            for (x = 0; x < 224;) {
+              if (finfo[x].name[0] == 0x00) {
+                break;
+              }
+              if ((finfo[x].type & 0x18) == 0) {
+                for (int y = 0; y < 11; y++) {
+                  if (finfo[x].name[y] != s[y]) {
+                    goto type_next_file;
+                  }
+                }
+                break;  // Found the file
+              }
+            type_next_file:
+              x++;
+            }
+            if (x < 224 && finfo[x].name[0] != 0x00) {  // Found the file
+              int y = finfo[x].size;
+              char *p = (char *)(finfo[x].clustno * 512 + 0x003e00 + ADR_DISKIMG);
+              cursor_x = 8;
+              for (x = 0; x < y; x++) {
+                s[0] = p[x];
+                s[1] = 0;
+                putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
+                cursor_x += 8;
+                if (cursor_x == 8 + 240) {
+                  cursor_x = 8;
+                  cursor_y = cons_newline(cursor_y, sheet);
+                }
+              }
+            } else {  // Didn't find the file
+              putfonts8_asc_sht(
+                  sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.", 15
+              );
+              cursor_y = cons_newline(cursor_y, sheet);
+            }
+            cursor_y = cons_newline(cursor_y, sheet);
           } else if (cmdline[0] != 0) {  // Not command, nor empty line
             putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
             cursor_y = cons_newline(cursor_y, sheet);

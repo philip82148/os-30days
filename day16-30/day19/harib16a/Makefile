@@ -12,7 +12,7 @@ rerun: re run
 
 $(IMG): output/ipl.bin output/haribote.sys ipl.nasm
 	mformat -f 1440 -B output/ipl.bin -C -i $@
-	mcopy output/haribote.sys ipl.nasm -i $@ ::
+	mcopy output/haribote.sys ipl.nasm Makefile -i $@ ::
 
 output/haribote.sys: output/asmhead.bin output/bootpack.hrb
 	cat $^ > $@

@@ -13,12 +13,15 @@ void make_wtitle8(unsigned char *buf, int xsize, const char *title, char act);
 void console_task(struct SHEET *sheet);
 
 void HariMain() {
-  static char keytable0[0x54] = {
-      0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,   'Q',
-      'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S', 'D', 'F',
-      'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V', 'B', 'N', 'M',
-      ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-      0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.',
+  static char keytable0[0x80] = {
+      0,   0,   '1', '2',  '3', '4', '5', '6', '7', '8', '9', '0', '-', '^',  0,   0,
+      'Q', 'W', 'E', 'R',  'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,    'A', 'S',
+      'D', 'F', 'G', 'H',  'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X',  'C', 'V',
+      'B', 'N', 'M', ',',  '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,    0,   0,
+      0,   0,   0,   0,    0,   0,   0,   '7', '8', '9', '-', '4', '5', '6',  '+', '1',
+      '2', '3', '0', '.',  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,    0,   0,
+      0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,    0,   0,
+      0,   0,   0,   0x5c, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0x5c, 0,   0,
   };
   static char keytable1[0x80] = {
       0,   0,   '!', 0x22, '#', '$', '%', '&', 0x27, '(', ')', '~', '=', '~', 0,   0,
@@ -180,6 +183,11 @@ void HariMain() {
             }
           } else {
             fifo32_put(&task_cons->fifo, 8 + 256);
+          }
+        }
+        if (data == 0x1c) {   // Enter
+          if (key_to != 0) {  // To console
+            fifo32_put(&task_cons->fifo, 10 + 256);
           }
         }
         if (data == 0x0f) {  // Tab
@@ -358,7 +366,7 @@ void console_task(struct SHEET *sheet) {
   // Display prompt
   putfonts8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
 
-  int cursor_x = 16, cursor_c = -1;
+  int cursor_x = 16, cursor_y = 28, cursor_c = -1;
   for (;;) {
     io_cli();
     if (fifo32_status(&task->fifo) == 0) {
@@ -389,18 +397,41 @@ void console_task(struct SHEET *sheet) {
             putfonts8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, " ", 1);
             cursor_x -= 8;
           }
+        } else if (data == 10) {  // Enter
+          // Remove cursor with space
+          putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+          if (cursor_y < 28 + 112) {  // Next line
+            cursor_y += 16;
+          } else {  // Scroll
+            for (int y = 28; y < 28 + 112; y++) {
+              for (int x = 8; x < 8 + 240; x++) {
+                sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (y + 16) * sheet->bxsize];
+              }
+            }
+            for (int y = 28 + 112; y < 28 + 128; y++) {
+              for (int x = 8; x < 8 + 240; x++) {
+                sheet->buf[x + y * sheet->bxsize] = COL8_000000;
+              }
+            }
+            sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+          }
+          // Display prompt
+          putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
+          cursor_x = 16;
         } else {  // Normal letter
           if (cursor_x < 240) {
             char s[2];
             s[0] = data;
             s[1] = 0;
-            putfonts8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, s, 1);
+            putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
             cursor_x += 8;
           }
         }
       }
       if (cursor_c >= 0)
-        boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+        boxfill8(
+            sheet->buf, sheet->bxsize, cursor_c, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15
+        );
       sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
     }
   }

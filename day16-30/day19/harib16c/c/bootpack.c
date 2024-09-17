@@ -20,6 +20,8 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);
 void make_wtitle8(unsigned char *buf, int xsize, const char *title, char act);
 void console_task(struct SHEET *sheet, unsigned int memtotal);
 int cons_newline(int cursor_y, struct SHEET *sheet);
+void file_readfat(int *fat, unsigned char *img);
+void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);
 
 void HariMain() {
   static char keytable0[0x80] = {
@@ -367,6 +369,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   struct FILEINFO *finfo = (struct FILEINFO *)(ADR_DISKIMG + 0x002600);
   int cursor_x = 16, cursor_y = 28, cursor_c = -1;
+
+  int *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
+  file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
   for (;;) {
     io_cli();
     if (fifo32_status(&task->fifo) == 0) {
@@ -468,11 +473,13 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
               x++;
             }
             if (x < 224 && finfo[x].name[0] != 0x00) {  // Found the file
-              int y = finfo[x].size;
-              char *p = (char *)(finfo[x].clustno * 512 + 0x003e00 + ADR_DISKIMG);
+              char *p = (char *)memman_alloc_4k(memman, finfo[x].size);
+              file_loadfile(
+                  finfo[x].clustno, finfo[x].size, p, fat, (char *)(ADR_DISKIMG + 0x003e00)
+              );
               cursor_x = 8;
-              for (x = 0; x < y; x++) {
-                s[0] = p[x];
+              for (int y = 0; y < finfo[x].size; y++) {
+                s[0] = p[y];
                 s[1] = 0;
                 if (s[0] == 0x09) {  // tab
                   for (;;) {
@@ -498,6 +505,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
                   }
                 }
               }
+              memman_free_4k(memman, (int)p, finfo[x].size);
             } else {  // Didn't find the file
               putfonts8_asc_sht(
                   sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.", 15
@@ -548,4 +556,27 @@ int cons_newline(int cursor_y, struct SHEET *sheet) {
     sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
   }
   return cursor_y;
+}
+
+void file_readfat(int *fat, unsigned char *img) {
+  int i, j = 0;
+  for (i = 0; i < 2880; i += 2) {
+    fat[i + 0] = (img[j + 0] | img[j + 1] << 8) & 0xfff;
+    fat[i + 1] = (img[j + 1] >> 4 | img[j + 2] << 4) & 0xfff;
+    j += 3;
+  }
+}
+
+void file_loadfile(int clustno, int size, char *buf, int *fat, char *img) {
+  int i;
+  for (;;) {
+    if (size <= 512) {
+      for (i = 0; i < size; i++) buf[i] = img[clustno * 512 + i];
+      break;
+    }
+    for (i = 0; i < 512; i++) buf[i] = img[clustno * 512 + i];
+    size -= 512;
+    buf += 512;
+    clustno = fat[clustno];
+  }
 }

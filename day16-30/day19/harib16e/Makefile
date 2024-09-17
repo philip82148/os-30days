@@ -10,9 +10,9 @@ run: $(IMG)
 rerun: re run
 .PHONY: rerun
 
-$(IMG): output/ipl.bin output/haribote.sys ipl.nasm
+$(IMG): output/ipl.bin output/haribote.sys ipl.nasm output/hlt.hrb
 	mformat -f 1440 -B output/ipl.bin -C -i $@
-	mcopy output/haribote.sys ipl.nasm Makefile -i $@ ::
+	mcopy output/haribote.sys ipl.nasm output/hlt.hrb Makefile -i $@ ::
 
 output/haribote.sys: output/asmhead.bin output/bootpack.hrb
 	cat $^ > $@
@@ -23,6 +23,9 @@ output/bootpack.hrb: bootpack.lds output/c/bootpack.o output/nasmfunc.o output/h
 					 output/c/sheet.o output/c/timer.o output/c/mtask.o output/lib/my_strcmp.o \
 					 output/lib/my_strncmp.o output/c/window.o output/c/console.o output/c/file.o
 	gcc -nostdlib -m32 -fno-pie -T $^ -o $@
+
+output/hlt.hrb: hlt.nasm
+	nasm $< -o $@ -l output/hlt.lst
 
 output/%.o: %.c
 	mkdir -p $(@D)

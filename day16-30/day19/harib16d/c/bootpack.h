@@ -252,3 +252,25 @@ struct TASK *task_alloc();
 void task_run(struct TASK *task, int level, int priority);
 void task_switch();
 void task_sleep(struct TASK *task);
+
+// window.c ---------------------------------------------------------------------------------------
+void make_window8(unsigned char *buf, int xsize, int ysize, const char *title, char act);
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, const char *s, int l);
+void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);
+void make_wtitle8(unsigned char *buf, int xsize, const char *title, char act);
+
+// console.c --------------------------------------------------------------------------------------
+void console_task(struct SHEET *sheet, unsigned int memtotal);
+int cons_newline(int cursor_y, struct SHEET *sheet);
+
+// file.c -----------------------------------------------------------------------------------------
+struct FILEINFO {
+  char name[8], ext[3];
+  unsigned char type;
+  char reserve[10];
+  unsigned short time, date, clustno;
+  unsigned int size;
+};
+
+void file_readfat(int *fat, unsigned char *img);
+void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);

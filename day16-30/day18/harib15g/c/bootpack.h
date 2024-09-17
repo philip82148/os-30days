@@ -8,6 +8,8 @@ int my_strcmp(const char *s1, const char *s2);
 
 // asmhead.nas ------------------------------------------------------------------------------------
 #define ADR_BOOTINFO 0x00000ff0
+#define ADR_DISKIMG  0x00100000
+
 struct BOOTINFO {
   unsigned char cyls, leds, vmode, reserve;
   short scrnx, scrny;

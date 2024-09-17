@@ -6,6 +6,14 @@
 
 #define KEYCMD_LED 0xed
 
+struct FILEINFO {
+  char name[8], ext[3];
+  unsigned char type;
+  char reserve[10];
+  unsigned short time, date, clustno;
+  unsigned int size;
+};
+
 void make_window8(unsigned char *buf, int xsize, int ysize, const char *title, char act);
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, const char *s, int l);
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);
@@ -357,6 +365,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
 
   char s[30], cmdline[30];
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+  struct FILEINFO *finfo = (struct FILEINFO *)(ADR_DISKIMG + 0x002600);
   int cursor_x = 16, cursor_y = 28, cursor_c = -1;
   for (;;) {
     io_cli();
@@ -396,7 +405,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
           cmdline[cursor_x / 8 - 2] = 0;
           cursor_y = cons_newline(cursor_y, sheet);
           // Execute command
-          if (my_strcmp(cmdline, "mem") == 0) {  // mem command
+          if (my_strcmp(cmdline, "mem") == 0) {
             my_sprintf(s, "total   %dMB", memtotal / (1024 * 1024));
             putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
             cursor_y = cons_newline(cursor_y, sheet);
@@ -410,6 +419,22 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
             }
             sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
             cursor_y = 28;
+          } else if (my_strcmp(cmdline, "dir") == 0) {
+            for (int x = 0; x < 224; x++) {
+              if (finfo[x].name[0] == 0x00) break;
+              if (finfo[x].name[0] != 0xe5) {
+                if ((finfo[x].type & 0x18) == 0) {
+                  my_sprintf(s, "filename.ext   %7d", finfo[x].size);
+                  for (int y = 0; y < 8; y++) s[y] = finfo[x].name[y];
+                  s[9] = finfo[x].ext[0];
+                  s[10] = finfo[x].ext[1];
+                  s[11] = finfo[x].ext[2];
+                  putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
+                  cursor_y = cons_newline(cursor_y, sheet);
+                }
+              }
+            }
+            cursor_y = cons_newline(cursor_y, sheet);
           } else if (cmdline[0] != 0) {  // Not command, nor empty line
             putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
             cursor_y = cons_newline(cursor_y, sheet);

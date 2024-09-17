@@ -10,9 +10,9 @@ run: $(IMG)
 rerun: re run
 .PHONY: rerun
 
-$(IMG): output/ipl.bin output/haribote.sys
+$(IMG): output/ipl.bin output/haribote.sys ipl.nasm
 	mformat -f 1440 -B output/ipl.bin -C -i $@
-	mcopy output/haribote.sys -i $@ ::
+	mcopy output/haribote.sys ipl.nasm -i $@ ::
 
 output/haribote.sys: output/asmhead.bin output/bootpack.hrb
 	cat $^ > $@

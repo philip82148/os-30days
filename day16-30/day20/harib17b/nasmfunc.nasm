@@ -12,7 +12,9 @@
 	GLOBAL asm_inthandler20, asm_inthandler21, asm_inthandler27, asm_inthandler2c
 	GLOBAL memtest_sub
 	GLOBAL farjmp
+	GLOBAL asm_cons_putchar
 	EXTERN inthandler21, inthandler20, inthandler27, inthandler2c
+	EXTERN cons_putchar
 
 io_hlt: ; void io_hlt();
     HLT
@@ -202,3 +204,12 @@ mts_fin:
 farjmp: ; void farjmp(int eip, int cs);
 	JMP FAR[ESP+4] ; cs:eip
 	RET
+
+asm_cons_putchar:
+		PUSH 1
+		AND  EAX, 0xff
+		PUSH EAX
+		PUSH DWORD [0x0fec]
+		CALL cons_putchar
+		ADD  ESP, 12
+		RET

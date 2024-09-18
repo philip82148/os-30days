@@ -38,7 +38,7 @@ void asm_inthandler2c();
 unsigned int memtest_sub(unsigned int start, unsigned int end);
 void farjmp(int eip, int cs);
 void farcall(int eip, int cs);
-void asm_cons_putchar();
+void asm_hrb_api();
 
 // fifo.c -----------------------------------------------------------------------------------------
 struct FIFO32 {

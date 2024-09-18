@@ -52,6 +52,7 @@
     "putblock",
     "putfont",
     "putfonts",
+    "putstr",
     "pxsize",
     "pysize",
     "readfat",

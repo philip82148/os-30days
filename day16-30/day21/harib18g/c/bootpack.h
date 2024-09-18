@@ -40,7 +40,7 @@ unsigned int memtest_sub(unsigned int start, unsigned int end);
 void farjmp(int eip, int cs);
 void farcall(int eip, int cs);
 void asm_hrb_api();
-void start_app(int eip, int cs, int esp, int ds);
+void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
 
 // fifo.c -----------------------------------------------------------------------------------------
 struct FIFO32 {

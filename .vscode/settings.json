@@ -13,6 +13,7 @@
     "cyls",
     "DISKIMG",
     "dsctbl",
+    "farcall",
     "farjmp",
     "fifobuf",
     "FREEINFO",

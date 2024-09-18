@@ -10,14 +10,16 @@ run: $(IMG)
 rerun: re run
 .PHONY: rerun
 
-$(IMG): output/ipl.bin output/haribote.sys ipl.nasm output/hello.hrb output/hello2.hrb
+$(IMG): output/ipl.bin output/haribote.sys ipl.nasm output/apps/hello.hrb output/apps/hello2.hrb \
+        output/apps/hello3.hrb output/apps/a.hrb
 	mformat -f 1440 -B output/ipl.bin -C -i $@
-	mcopy output/haribote.sys ipl.nasm output/hello.hrb output/hello2.hrb Makefile -i $@ ::
+	mcopy output/haribote.sys ipl.nasm output/apps/hello.hrb output/apps/hello2.hrb output/apps/hello3.hrb \
+		output/apps/a.hrb Makefile -i $@ ::
 
 output/haribote.sys: output/asmhead.bin output/bootpack.hrb
 	cat $^ > $@
 
-output/bootpack.hrb: bootpack.lds output/c/bootpack.o output/nasmfunc.o output/hankaku.o \
+output/bootpack.hrb: bootpack.lds output/c/bootpack.o output/nasmfunc.obj output/hankaku.o \
 					 output/lib/my_sprintf.o output/c/graphic.o output/c/dsctbl.o output/c/int.o \
 					 output/c/fifo.o output/c/keyboard.o output/c/mouse.o output/c/memory.o \
 					 output/c/sheet.o output/c/timer.o output/c/mtask.o output/lib/my_strcmp.o \
@@ -25,7 +27,12 @@ output/bootpack.hrb: bootpack.lds output/c/bootpack.o output/nasmfunc.o output/h
 	gcc -nostdlib -m32 -fno-pie -Wl,-Map=output/bootpack.map -g -T $^ -o $@
 
 output/%.hrb: %.nasm
+	mkdir -p $(@D)
 	nasm $< -o $@ -l output/$*.lst
+
+output/%.hrb : app.ld output/%.o output/a_nasm.obj
+	mkdir -p $(@D)
+	gcc -nostdlib -m32 -fno-pie -g -T $^ -o $@
 
 output/%.o: %.c
 	mkdir -p $(@D)
@@ -45,9 +52,9 @@ output/make_hankaku_c: hankaku/make_hankaku_c.c
 	mkdir -p $(@D)
 	gcc $< -o $@
 
-output/nasmfunc.o: nasmfunc.nasm
+output/%.obj: %.nasm
 	mkdir -p $(@D)
-	nasm -f elf32 $< -o $@ -l output/nasmfunc.lst
+	nasm -f elf32 $< -o $@ -l output/$*.lst
 
 output/%.bin: %.nasm
 	mkdir -p $(@D)

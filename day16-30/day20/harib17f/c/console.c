@@ -146,12 +146,12 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
     cmd_dir(cons);
   } else if (my_strncmp(cmdline, "type ", 5) == 0) {
     cmd_type(cons, fat, cmdline);
-  } else if (my_strcmp(cmdline, "hlt") == 0) {
-    cmd_hlt(cons, fat);
-  } else if (cmdline[0] != 0) {  // Not command, nor empty line
-    putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
-    cons_newline(cons);
-    cons_newline(cons);
+  } else if (cmdline[0] != 0) {
+    if (cmd_app(cons, fat, cmdline) == 0) {  // Not command, app, empty line
+      putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
+      cons_newline(cons);
+      cons_newline(cons);
+    }
   }
 }
 
@@ -231,4 +231,43 @@ void cmd_hlt(struct CONSOLE *cons, int *fat) {
     cons_newline(cons);
   }
   cons_newline(cons);
+}
+
+int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline) {
+  struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+  struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
+
+  char name[18];
+  int i;
+  // Make filename from command
+  for (i = 0; i < 13; i++) {
+    if (cmdline[i] <= ' ') break;
+    name[i] = cmdline[i];
+  }
+  name[i] = 0;
+
+  // Look for file
+  struct FILEINFO *finfo = file_search(name, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+  // Not found, add ".HRB" and search again
+  if (finfo == 0 && name[i - 1] != '.') {
+    name[i] = '.';
+    name[i + 1] = 'H';
+    name[i + 2] = 'R';
+    name[i + 3] = 'B';
+    name[i + 4] = 0;
+    finfo = file_search(name, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+  }
+
+  if (finfo != 0) {  // Found the file
+    char *p = (char *)memman_alloc_4k(memman, finfo->size);
+    file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
+    set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);
+    farcall(0, 1003 * 8);
+    memman_free_4k(memman, (int)p, finfo->size);
+    cons_newline(cons);
+    return 1;
+  }
+
+  // Not found
+  return 0;
 }

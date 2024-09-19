@@ -9,9 +9,6 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
   int fifobuf[128];
   fifo32_init(&task->fifo, 128, fifobuf, task);
 
-  struct TIMER *timer = timer_alloc();
-  timer_init(timer, &task->fifo, 1);
-  timer_settime(timer, 50);
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   int *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
   file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
@@ -23,7 +20,10 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
   cons.cur_y = 28;
   cons.cur_c = -1;
   *((int *)0x0fec) = (int)&cons;
-  cons_putchar(&cons, '>', 1);
+
+  cons.timer = timer_alloc();
+  timer_init(cons.timer, &task->fifo, 1);
+  timer_settime(cons.timer, 50);
 
   char cmdline[30];
   for (;;) {

@@ -6,6 +6,9 @@
 
 #define KEYCMD_LED 0xed
 
+int keywin_off(struct SHEET *key_win, struct SHEET *sht_win, int cur_c, int cur_x);
+int keywin_on(struct SHEET *key_win, struct SHEET *sht_win, int cur_c);
+
 void HariMain() {
   static char keytable0[0x80] = {
       0,   0,   '1', '2',  '3', '4', '5', '6', '7', '8', '9', '0', '-', '^',  0,   0,
@@ -122,6 +125,12 @@ void HariMain() {
   int mmx = -1, mmy = -1;
   struct SHEET *sht = 0;
 
+  // アプリが作ったウインドウかかの判別、マスク0x10
+  // カーソルon/offの必要があるかどうかを判断、マスク0x20
+  struct SHEET *key_win = sht_win;
+  sht_cons->task = task_cons;
+  sht_cons->flags |= 0x20;  // カーソルあり
+
   // 最初にキーボード状態との食い違いがないように設定する
   fifo32_put(&keycmd, KEYCMD_LED);
   fifo32_put(&keycmd, key_leds);
@@ -140,6 +149,11 @@ void HariMain() {
     } else {
       int data = fifo32_get(&fifo);
       io_sti();
+      if (key_win->flags == 0) {  // 入力ウィンドウが閉じられた(ウインドウがなくなっていた)
+        // 2番目のウィンドウにむける
+        key_win = shtctl->sheets[shtctl->top - 1];
+        cursor_c = keywin_on(key_win, sht_win, cursor_c);
+      }
       if (data >= 256 && data < 512) {  // Keyboard
         data -= 256;
         if (data < 0x80) {
@@ -156,49 +170,38 @@ void HariMain() {
             s[0] += 0x20;
           }
         }
-        if (s[0] != 0) {      // Normal letter
-          if (key_to == 0) {  // To task_a
+        if (s[0] != 0) {             // Normal letter
+          if (key_win == sht_win) {  // To task_a
             if (cursor_x < 128) {
               s[1] = 0;
               putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
               cursor_x += 8;
             }
           } else {  // To console
-            fifo32_put(&task_cons->fifo, s[0] + 256);
+            fifo32_put(&key_win->task->fifo, s[0] + 256);
           }
         }
-        if (data == 0x0e) {   // Backspace
-          if (key_to == 0) {  // To task_a
+        if (data == 0x0e) {          // Backspace
+          if (key_win == sht_win) {  // To task_a
             if (cursor_x > 8) {
               putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
               cursor_x -= 8;
             }
           } else {
-            fifo32_put(&task_cons->fifo, 8 + 256);
+            fifo32_put(&key_win->task->fifo, 8 + 256);
           }
         }
-        if (data == 0x1c) {   // Enter
-          if (key_to != 0) {  // To console
-            fifo32_put(&task_cons->fifo, 10 + 256);
+        if (data == 0x1c) {          // Enter
+          if (key_win != sht_win) {  // To console
+            fifo32_put(&key_win->task->fifo, 10 + 256);
           }
         }
         if (data == 0x0f) {  // Tab
-          if (key_to == 0) {
-            key_to = 1;
-            make_wtitle8(buf_win, sht_win->bxsize, "task_a", 0);
-            make_wtitle8(buf_cons, sht_cons->bxsize, "console", 1);
-            cursor_c = -1;  // Hide cursor
-            boxfill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cursor_x, 28, cursor_x + 7, 43);
-            fifo32_put(&task_cons->fifo, 2);  // Console cursor ON
-          } else {
-            key_to = 0;
-            make_wtitle8(buf_win, sht_win->bxsize, "task_a", 1);
-            make_wtitle8(buf_cons, sht_cons->bxsize, "console", 0);
-            cursor_c = COL8_000000;           // Show cursor
-            fifo32_put(&task_cons->fifo, 3);  // Console cursor OFF
-          }
-          sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
-          sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
+          cursor_c = keywin_off(key_win, sht_win, cursor_c, cursor_x);
+          int j = key_win->height - 1;
+          if (j == 0) j = shtctl->top - 1;
+          key_win = shtctl->sheets[j];
+          cursor_c = keywin_on(key_win, sht_win, cursor_c);
         }
         if (data == 0x2a) key_shift |= 1;   // Left shift ON
         if (data == 0x36) key_shift |= 2;   // Right shift ON
@@ -275,12 +278,10 @@ void HariMain() {
                     // 閉じるボタンのクリック
                     if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {
                       // アプリが作ったウィンドウ
-                      if (sht->task != 0) {
+                      if ((sht->flags & 0x10) != 0) {  // Made by the app?
                         struct CONSOLE *cons = (struct CONSOLE *)*((int *)0x0fec);
-                        cons_putstr0(cons, "\nBreak(mouse):\n");
-
-                        // 強制終了
-                        io_cli();  // 強制終了中にタスクスイッチさせない
+                        cons_putstr0(cons, "\nBreak(mouse) :\n");
+                        io_cli();
                         task_cons->tss.eax = (int)&(task_cons->tss.esp0);
                         task_cons->tss.eip = (int)asm_end_app;
                         io_sti();
@@ -323,4 +324,29 @@ void HariMain() {
       }
     }
   }
+}
+
+int keywin_off(struct SHEET *key_win, struct SHEET *sht_win, int cur_c, int cur_x) {
+  change_wtitle8(key_win, 0);
+  if (key_win == sht_win) {
+    cur_c = -1;
+    boxfill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cur_x, 28, cur_x + 7, 43);
+  } else {
+    if ((key_win->flags & 0x20) != 0) {
+      fifo32_put(&key_win->task->fifo, 3);
+    }
+  }
+  return cur_c;
+}
+
+int keywin_on(struct SHEET *key_win, struct SHEET *sht_win, int cur_c) {
+  change_wtitle8(key_win, 1);
+  if (key_win == sht_win) {
+    cur_c = COL8_000000;
+  } else {
+    if ((key_win->flags & 0x20) != 0) {
+      fifo32_put(&key_win->task->fifo, 2);
+    }
+  }
+  return cur_c;
 }

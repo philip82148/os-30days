@@ -35,6 +35,7 @@
     "KEYCMD",
     "keyfifo",
     "KEYSTA",
+    "keywin",
     "ldtr",
     "leds",
     "linewin",

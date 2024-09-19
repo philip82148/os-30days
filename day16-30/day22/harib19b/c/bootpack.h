@@ -31,6 +31,7 @@ void load_idtr(int limit, int addr);
 int load_cr0();
 void store_cr0(int cr0);
 void load_tr(int tr);
+void asm_inthandler0c();
 void asm_inthandler0d();
 void asm_inthandler20();
 void asm_inthandler21();

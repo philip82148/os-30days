@@ -11,12 +11,10 @@ rerun: re run
 .PHONY: rerun
 
 $(IMG): output/ipl.bin output/haribote.sys ipl.nasm output/apps/hello.hrb output/apps/hello2.hrb \
-        output/apps/hello3.hrb output/apps/a.hrb output/apps/crack1.hrb output/apps/crack2.hrb \
-		output/apps/crack3.hrb output/apps/crack4.hrb output/apps/crack5.hrb output/apps/crack6.hrb
+        output/apps/hello3.hrb output/apps/a.hrb output/apps/bug1.hrb
 	mformat -f 1440 -B output/ipl.bin -C -i $@
 	mcopy output/haribote.sys ipl.nasm output/apps/hello.hrb output/apps/hello2.hrb output/apps/hello3.hrb \
-		output/apps/a.hrb output/apps/crack1.hrb output/apps/crack2.hrb \
-		output/apps/crack3.hrb output/apps/crack4.hrb output/apps/crack5.hrb output/apps/crack6.hrb Makefile -i $@ ::
+		output/apps/a.hrb Makefile output/apps/bug1.hrb -i $@ ::
 
 output/haribote.sys: output/asmhead.bin output/bootpack.hrb
 	cat $^ > $@

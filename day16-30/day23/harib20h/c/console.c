@@ -252,6 +252,11 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline) {
       set_segmdesc(gdt + 1004, segsiz - 1, (int)q, AR_DATA32_RW + 0x60);
       for (i = 0; i < datsiz; i++) q[esp + i] = p[dathrb + i];
       start_app(0x1b, 1003 * 8, esp, 1004 * 8, &(task->tss.esp0));
+      struct SHTCTL *shtctl = (struct SHTCTL *)*((int *)0x0fe4);
+      for (i = 0; i < MAX_SHEETS; i++) {
+        struct SHEET *sht = &(shtctl->sheets0[i]);
+        if (sht->flags != 0 && sht->task == task) sheet_free(sht);  // Close
+      }
       memman_free_4k(memman, (int)q, segsiz);
     } else {
       cons_putstr0(cons, ".hrb file format error.\n");
@@ -284,6 +289,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
     return &task->tss.esp0;
   } else if (edx == 5) {
     struct SHEET *sht = sheet_alloc(shtctl);
+    sht->task = task;
     sheet_setbuf(sht, (char *)ebx + ds_base, esi, edi, eax);
     make_window8((char *)ebx + ds_base, esi, edi, (char *)ecx + ds_base, 0);
     sheet_slide(sht, 100, 50);

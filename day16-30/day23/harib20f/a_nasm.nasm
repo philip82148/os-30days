@@ -11,6 +11,8 @@
 	GLOBAL api_point
 	GLOBAL api_refreshwin
 	GLOBAL api_linewin
+	GLOBAL api_closewin
+	GLOBAL api_getkey
 
 [SECTION .text]
 api_putchar: ; void api_putchar(int c)
@@ -164,4 +166,18 @@ api_linewin: ; void api_linewin(int win, int x0, int y0, int x1, int y1, int col
 	POP  EBP
 	POP  ESI
 	POP  EDI
+	RET
+
+api_closewin: ; void api_closewin(int win);
+	PUSH EBX
+	MOV  EDX, 14
+	MOV  EBX, [ESP+8] ; win
+	INT  0x40
+	POP  EBX
+	RET
+
+api_getkey: ; int api_getkey(int mode)
+	MOV EDX, 15
+	MOV EAX, [ESP+4] ; mode
+	INT 0x40
 	RET

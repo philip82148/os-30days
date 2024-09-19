@@ -321,6 +321,37 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
     if ((ebx & 1) == 0) {
       sheet_refresh(sht, eax, ecx, esi + 1, edi + 1);
     }
+  } else if (edx == 14) {
+    sheet_free((struct SHEET *)ebx);
+  } else if (edx == 15) {
+    for (;;) {
+      io_cli();
+      if (fifo32_status(&task->fifo) == 0) {
+        if (eax != 0) {
+          task_sleep(task);  // No FIFO, go to sleep
+        } else {
+          io_sti();
+          reg[7] = -1;
+          return 0;
+        }
+      }
+      int data = fifo32_get(&task->fifo);
+      io_sti();
+      if (data <= 1) {  // Timer for cursor
+        timer_init(cons->timer, &task->fifo, 1);
+        timer_settime(cons->timer, 50);
+      }
+      if (data == 2) {  // Cursor ON
+        cons->cur_c = COL8_FFFFFF;
+      }
+      if (data == 3) {  // Cursor OFF
+        cons->cur_c = -1;
+      }
+      if (256 <= data && data <= 511) {  // Keyboard input
+        reg[7] = data - 256;
+        return 0;
+      }
+    }
   }
   return 0;
 }

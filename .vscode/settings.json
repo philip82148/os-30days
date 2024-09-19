@@ -25,6 +25,7 @@
     "Hari",
     "Haribote",
     "idtr",
+    "initmalloc",
     "INTGATE",
     "inthandler",
     "iomap",
@@ -82,6 +83,8 @@
     "vmode",
     "vxsize",
     "wtitle",
+    "xsiz",
+    "ysiz",
     "ysize"
   ]
 }

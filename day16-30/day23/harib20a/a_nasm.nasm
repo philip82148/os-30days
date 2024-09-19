@@ -5,6 +5,9 @@
 	GLOBAL api_openwin
 	GLOBAL api_putstrwin
 	GLOBAL api_boxfilwin
+	GLOBAL api_initmalloc
+	GLOBAL api_malloc
+	GLOBAL api_free
 
 [SECTION .text]
 api_putchar: ; void api_putchar(int c)
@@ -77,4 +80,35 @@ api_boxfilwin: ; void api_boxfilwin(int win, int x0, int y0, int x1, int y1, int
 	POP  EBP
 	POP  ESI
 	POP  EDI
+	RET
+
+api_initmalloc: ; void api_initmalloc()
+	PUSH EBX
+	MOV  EDX, 8
+	MOV  EBX, [CS:0x0020]
+	MOV  EAX, EBX
+	ADD  EAX, 32*1024
+	MOV  ECX, [CS:0x0000]
+	SUB  ECX, EAX
+	INT  0x40
+	POP  EBX
+	RET
+
+api_malloc: ; char *api_malloc(int size)
+	PUSH EBX
+	MOV  EDX, 9
+	MOV  EBX, [CS:0x0020]
+	MOV  ECX, [ESP+8]
+	INT  0x40
+	POP  EBX
+	RET
+
+api_free: ; void api_free(char *addr, int size)
+	PUSH EBX
+	MOV  EDX, 10
+	MOV  EBX, [CS:0x0020]
+	MOV  EAX, [ESP+ 8]
+	MOV  ECX, [ESP+12]
+	INT  0x40
+	POP  EBX
 	RET

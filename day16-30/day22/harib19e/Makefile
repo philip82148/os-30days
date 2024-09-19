@@ -12,7 +12,7 @@ rerun: re run
 
 $(IMG): output/ipl.bin output/haribote.sys ipl.nasm output/apps/hello.hrb output/apps/hello2.hrb \
         output/apps/hello3.hrb output/apps/a.hrb output/apps/bug1.hrb output/apps/bug2.hrb \
-		output/apps/bug3.hrb output/apps/hello4.hrb
+		output/apps/bug3.hrb output/apps/hello4.hrb output/apps/hello5.hrb
 	mformat -f 1440 -B $< -C -i $@
 	mcopy $(filter-out $<, $^) Makefile -i $@ ::
 
@@ -25,6 +25,10 @@ output/bootpack.hrb: bootpack.lds output/c/bootpack.o output/nasmfunc.obj output
 					 output/c/sheet.o output/c/timer.o output/c/mtask.o output/lib/my_strcmp.o \
 					 output/lib/my_strncmp.o output/c/window.o output/c/console.o output/c/file.o
 	gcc -nostdlib -m32 -fno-pie -Wl,-Map=output/bootpack.map -g -T $^ -o $@
+
+output/apps/hello5.hrb: app.ld output/apps/hello5.obj
+	mkdir -p $(@D)
+	gcc -nostdlib -m32 -fno-pie -g -T $^ -o $@
 
 output/%.hrb: %.nasm
 	mkdir -p $(@D)

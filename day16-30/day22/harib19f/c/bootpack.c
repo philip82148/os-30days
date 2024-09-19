@@ -62,7 +62,8 @@ void HariMain() {
   struct SHTCTL *shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
   struct TASK *task_a = task_init(memman);
   fifo.task = task_a;
-  task_run(task_a, 1, 0);
+  task_run(task_a, 1, 2);
+  *((int *)0x0fe4) = (int)shtctl;
 
   // sht_back
   struct SHEET *sht_back = sheet_alloc(shtctl);

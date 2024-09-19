@@ -1,0 +1,1 @@
+void HariMain() { for (;;); }

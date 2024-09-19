@@ -119,6 +119,8 @@ void HariMain() {
   sheet_updown(sht_mouse, 3);
 
   int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
+  int mmx = -1, mmy = -1;
+  struct SHEET *sht = 0;
 
   // 最初にキーボード状態との食い違いがないように設定する
   fifo32_put(&keycmd, KEYCMD_LED);
@@ -250,21 +252,44 @@ void HariMain() {
           sheet_slide(sht_mouse, mx, my);
           // 左クリック
           if ((mdec.btn & 0x01) != 0) {
-            // 上の下敷きから順番にマウスが押している下敷きを探す
-            for (int j = shtctl->top - 1; j > 0; j--) {
-              struct SHEET *sht = shtctl->sheets[j];
-              int x = mx - sht->vx0;
-              int y = my - sht->vy0;
+            if (mmx < 0) {
+              // 上の下敷きから順番にマウスが押している下敷きを探す
+              for (int j = shtctl->top - 1; j > 0; j--) {
+                sht = shtctl->sheets[j];
+                int x = mx - sht->vx0;
+                int y = my - sht->vy0;
 
-              // マウスが乗っているウインドウの判定
-              if (x >= 0 && x < sht->bxsize && 0 <= y && y < sht->bysize) {
-                // 透明でない
-                if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
-                  sheet_updown(sht, shtctl->top - 1);
-                  break;
+                // マウスが乗っているウインドウの判定
+                if (x >= 0 && x < sht->bxsize && 0 <= y && y < sht->bysize) {
+                  // 透明でない
+                  if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
+                    sheet_updown(sht, shtctl->top - 1);
+
+                    // タイトルバーを掴んだ
+                    if (x >= 3 && x < sht->bxsize - 3 && y >= 3 && y < 21) {
+                      // ウインドウ移動モードにする
+                      mmx = mx;
+                      mmy = my;
+                    }
+                    break;
+                  }
                 }
               }
+            } else {
+              // ウインドウ移動モード
+
+              // マウスの移動量を計算して移動
+              int x = mx - mmx;
+              int y = my - mmy;
+              sheet_slide(sht, sht->vx0 + x, sht->vy0 + y);
+
+              // 移動先の座標に更新
+              mmx = mx;
+              mmy = my;
             }
+          } else {
+            // 左ボタンを押していない
+            mmx = -1;  // 通常モードにする
           }
         }
       } else if (data <= 1) {  // Cursor timer

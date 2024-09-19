@@ -1,5 +1,6 @@
 {
   "cSpell.words": [
+    "alloctimer",
     "asmhead",
     "backlink",
     "binfo",
@@ -27,6 +28,7 @@
     "Haribote",
     "idtr",
     "initmalloc",
+    "inittimer",
     "INTGATE",
     "inthandler",
     "iomap",
@@ -70,6 +72,7 @@
     "scrny",
     "segmdesc",
     "sendready",
+    "settimer",
     "SHTCTL",
     "stihlt",
     "switchsub",

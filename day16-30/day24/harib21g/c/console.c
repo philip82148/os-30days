@@ -9,9 +9,6 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
   int fifobuf[128];
   fifo32_init(&task->fifo, 128, fifobuf, task);
 
-  struct TIMER *timer = timer_alloc();
-  timer_init(timer, &task->fifo, 1);
-  timer_settime(timer, 50);
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   int *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
   file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
@@ -23,6 +20,11 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
   cons.cur_y = 28;
   cons.cur_c = -1;
   *((int *)0x0fec) = (int)&cons;
+
+  cons.timer = timer_alloc();
+  timer_init(cons.timer, &task->fifo, 1);
+  timer_settime(cons.timer, 50);
+
   cons_putchar(&cons, '>', 1);
 
   char cmdline[30];
@@ -36,13 +38,13 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
       io_sti();
       if (data <= 1) {  // Timer for cursor
         if (data) {
-          timer_init(timer, &task->fifo, 0);
+          timer_init(cons.timer, &task->fifo, 0);
           if (cons.cur_c >= 0) cons.cur_c = COL8_FFFFFF;
         } else {
-          timer_init(timer, &task->fifo, 1);
+          timer_init(cons.timer, &task->fifo, 1);
           if (cons.cur_c >= 0) cons.cur_c = COL8_000000;
         }
-        timer_settime(timer, 50);
+        timer_settime(cons.timer, 50);
       }
       if (data == 2) cons.cur_c = COL8_FFFFFF;  // Cursor ON
       if (data == 3) {                          // Cursor OFF
@@ -347,17 +349,22 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
         timer_init(cons->timer, &task->fifo, 1);
         timer_settime(cons->timer, 50);
       }
-      if (data == 2) {  // Cursor ON
-        cons->cur_c = COL8_FFFFFF;
-      }
-      if (data == 3) {  // Cursor OFF
-        cons->cur_c = -1;
-      }
-      if (256 <= data && data <= 511) {  // Keyboard input
-        reg[7] = data - 256;
+      if (data == 2) cons->cur_c = COL8_FFFFFF;  // Cursor ON
+      if (data == 3) cons->cur_c = -1;           // Cursor OFF
+      if (data >= 256) {                         // Keyboard input
+        data -= 256;
+        reg[7] = data;
         return 0;
       }
     }
+  } else if (edx == 16) {
+    reg[7] = (int)timer_alloc();
+  } else if (edx == 17) {
+    timer_init((struct TIMER *)ebx, &task->fifo, eax + 256);
+  } else if (edx == 18) {
+    timer_settime((struct TIMER *)ebx, eax);
+  } else if (edx == 19) {
+    timer_free((struct TIMER *)ebx);
   }
   return 0;
 }

@@ -309,7 +309,6 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
     memman_free((struct MEMMAN *)(ebx + ds_base), eax, ecx);
   } else if (edx == 9) {
     ecx = (ecx + 0x0f) & 0xfffffff0;  // Round up to 16-byte base
-    memman_free((struct MEMMAN *)(ebx + ds_base), eax, ecx);
     reg[7] = memman_alloc((struct MEMMAN *)(ebx + ds_base), ecx);
   } else if (edx == 10) {
     ecx = (ecx + 0x0f) & 0xfffffff0;  // Round up to 16-byte base

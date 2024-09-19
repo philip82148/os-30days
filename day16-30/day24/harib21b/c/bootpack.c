@@ -220,6 +220,8 @@ void HariMain() {
           task_cons->tss.eip = (int)asm_end_app;
           io_sti();
         }
+        if (data == 0x57 && shtctl->top > 2)
+          sheet_updown(shtctl->sheets[1], shtctl->top - 1);  // F11
         if (data == 0xfa) {
           keycmd_wait = -1;
         }  // Keyboard received data
@@ -246,7 +248,24 @@ void HariMain() {
           if (my > binfo->scrny - 1) my = binfo->scrny - 1;
 
           sheet_slide(sht_mouse, mx, my);
-          if (mdec.btn & 0x01) sheet_slide(sht_win, mx - 80, my - 8);
+          // 左クリック
+          if ((mdec.btn & 0x01) != 0) {
+            // 上の下敷きから順番にマウスが押している下敷きを探す
+            for (int j = shtctl->top - 1; j > 0; j--) {
+              struct SHEET *sht = shtctl->sheets[j];
+              int x = mx - sht->vx0;
+              int y = my - sht->vy0;
+
+              // マウスが乗っているウインドウの判定
+              if (x >= 0 && x < sht->bxsize && 0 <= y && y < sht->bysize) {
+                // 透明でない
+                if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
+                  sheet_updown(sht, shtctl->top - 1);
+                  break;
+                }
+              }
+            }
+          }
         }
       } else if (data <= 1) {  // Cursor timer
         if (data) {

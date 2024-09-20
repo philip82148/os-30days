@@ -6,7 +6,7 @@ API_OBJECTS=output/api/api001.obj output/api/api002.obj output/api/api003.obj ou
 			output/api/api013.obj output/api/api014.obj output/api/api015.obj output/api/api016.obj \
 			output/api/api017.obj output/api/api018.obj output/api/api019.obj output/api/api020.obj \
 			output/api/api021.obj output/api/api022.obj output/api/api023.obj output/api/api024.obj \
-			output/api/api025.obj output/api/api026.obj
+			output/api/api025.obj output/api/api026.obj output/api/api027.obj
 APPS=output/apps/a.hrb output/apps/hello3.hrb output/apps/hello4.hrb output/apps/hello5.hrb \
 	 output/apps/winhelo.hrb output/apps/winhelo2.hrb output/apps/winhelo3.hrb \
 	 output/apps/star1.hrb output/apps/stars.hrb output/apps/stars2.hrb \
@@ -15,8 +15,9 @@ APPS=output/apps/a.hrb output/apps/hello3.hrb output/apps/hello4.hrb output/apps
 	 output/apps/color.hrb output/apps/color2.hrb \
 	 output/apps/sosu.hrb output/apps/sosu2.hrb output/apps/sosu3.hrb \
 	 output/apps/typemkfl.hrb output/apps/type.hrb \
-	 output/apps/iroha.hrb
-SAMPLE_TXTS=ipl.nasm Makefile ../../sample_txts/shiftjis.txt ../../sample_txts/utf8.txt
+	 output/apps/iroha.hrb output/apps/chklang.hrb
+SAMPLE_TXTS=ipl.nasm Makefile \
+			../../sample_txts/shiftjis.txt ../../sample_txts/euc.txt ../../sample_txts/utf8.txt
 
 all: $(IMG)
 .PHONY: all
@@ -28,7 +29,7 @@ run: $(IMG)
 rerun: re run
 .PHONY: rerun
 
-$(IMG): output/ipl.bin output/haribote.sys $(SAMPLE_TXTS) $(APPS) ../../fonts/nihongo.fnt
+$(IMG): output/ipl.bin output/haribote.sys ../../fonts/nihongo.fnt $(SAMPLE_TXTS) $(APPS)
 	mformat -f 1440 -B $< -C -i $@
 	mcopy $(filter-out $<, $^) -i $@ ::
 

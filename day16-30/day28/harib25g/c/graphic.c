@@ -139,6 +139,26 @@ void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c
       x += 8;
     }
   }
+  if (task->langmode == 2) {
+    for (; *s != 0x00; s++) {
+      unsigned char s_unsigned = *s;
+      if (task->langbyte1 == 0) {
+        if (0x81 <= s_unsigned && s_unsigned <= 0xfe) {
+          task->langbyte1 = s_unsigned;
+        } else {
+          putfont8(vram, xsize, x, y, c, nihongo + s_unsigned * 16);
+        }
+      } else {
+        int k = task->langbyte1 - 0xa1;
+        int t = s_unsigned - 0xa1;
+        task->langbyte1 = 0;
+        unsigned char *font = nihongo + 256 * 16 + (k * 94 + t) * 32;
+        putfont8(vram, xsize, x - 8, y, c, font);
+        putfont8(vram, xsize, x, y, c, font + 16);
+      }
+      x += 8;
+    }
+  }
 }
 
 void init_mouse_cursor8(unsigned char *mouse, unsigned char bc) {

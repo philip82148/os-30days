@@ -1,6 +1,6 @@
 ; hello-os
 
-CYLS EQU 10
+CYLS EQU 20
 
     ORG 0x7c00
 

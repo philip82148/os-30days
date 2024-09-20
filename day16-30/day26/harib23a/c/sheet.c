@@ -67,12 +67,22 @@ void sheet_refreshmap(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1, in
     if (sht_y0 < 0) sht_y0 = 0;
     if (sht_x1 > sht->bxsize) sht_x1 = sht->bxsize;
     if (sht_y1 > sht->bysize) sht_y1 = sht->bysize;
-    for (int sht_y = sht_y0; sht_y < sht_y1; sht_y++) {
-      int vy = sht->vy0 + sht_y;
-      for (int sht_x = sht_x0; sht_x < sht_x1; sht_x++) {
-        int vx = sht->vx0 + sht_x;
-        if (sht->buf[sht_y * sht->bxsize + sht_x] != sht->col_inv)
+    if (sht->col_inv == -1) {
+      for (int sht_y = sht_y0; sht_y < sht_y1; sht_y++) {
+        int vy = sht->vy0 + sht_y;
+        for (int sht_x = sht_x0; sht_x < sht_x1; sht_x++) {
+          int vx = sht->vx0 + sht_x;
           ctl->map[vy * ctl->xsize + vx] = sht_id;
+        }
+      }
+    } else {  // Has transparency
+      for (int sht_y = sht_y0; sht_y < sht_y1; sht_y++) {
+        int vy = sht->vy0 + sht_y;
+        for (int sht_x = sht_x0; sht_x < sht_x1; sht_x++) {
+          int vx = sht->vx0 + sht_x;
+          if (sht->buf[sht_y * sht->bxsize + sht_x] != sht->col_inv)
+            ctl->map[vy * ctl->xsize + vx] = sht_id;
+        }
       }
     }
   }

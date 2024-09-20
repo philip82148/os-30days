@@ -15,7 +15,8 @@ $(IMG): output/ipl.bin output/haribote.sys ipl.nasm output/apps/hello.hrb output
         output/apps/hello3.hrb output/apps/a.hrb output/apps/hello4.hrb output/apps/hello5.hrb \
 		output/apps/winhelo.hrb output/apps/winhelo2.hrb output/apps/winhelo3.hrb output/apps/star1.hrb \
 		output/apps/stars.hrb output/apps/star2.hrb output/apps/lines.hrb output/apps/walk.hrb \
-		output/apps/noodle.hrb output/apps/beepdown.hrb output/apps/color.hrb output/apps/color2.hrb
+		output/apps/noodle.hrb output/apps/beepdown.hrb output/apps/color.hrb output/apps/color2.hrb \
+		output/apps/crack7.hrb
 	mformat -f 1440 -B $< -C -i $@
 	mcopy $(filter-out $<, $^) Makefile -i $@ ::
 
@@ -29,11 +30,11 @@ output/bootpack.hrb: bootpack.lds output/c/bootpack.o output/nasmfunc.obj output
 					 output/c/console.o output/c/file.o
 	gcc -nostdlib -m32 -fno-pie -Wl,-Map=output/bootpack.map -g -T $^ -o $@
 
-output/apps/hello5.hrb: app.ld output/apps/hello5.obj
+output/%.hrb: app.ld output/%.obj
 	mkdir -p $(@D)
 	gcc -nostdlib -m32 -fno-pie -g -T $^ -o $@
 
-output/%.hrb: %.nasm
+output/%.hrb: %.nas
 	mkdir -p $(@D)
 	nasm $< -o $@ -l output/$*.lst
 

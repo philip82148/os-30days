@@ -4,7 +4,9 @@ API_OBJECTS=output/api/api001.obj output/api/api002.obj output/api/api003.obj ou
 			output/api/api005.obj output/api/api006.obj output/api/api007.obj output/api/api008.obj \
 			output/api/api009.obj output/api/api010.obj output/api/api011.obj output/api/api012.obj \
 			output/api/api013.obj output/api/api014.obj output/api/api015.obj output/api/api016.obj \
-			output/api/api017.obj output/api/api018.obj output/api/api019.obj output/api/api020.obj
+			output/api/api017.obj output/api/api018.obj output/api/api019.obj output/api/api020.obj \
+			output/api/api021.obj output/api/api022.obj output/api/api023.obj output/api/api024.obj \
+			output/api/api025.obj
 
 all: $(IMG)
 .PHONY: all
@@ -23,7 +25,8 @@ $(IMG): output/ipl.bin output/haribote.sys ipl.nasm Makefile output/apps/a.hrb \
 		output/apps/lines.hrb output/apps/walk.hrb \
 		output/apps/noodle.hrb output/apps/beepdown.hrb \
 		output/apps/color.hrb output/apps/color2.hrb \
-		output/apps/sosu.hrb output/apps/sosu2.hrb output/apps/sosu3.hrb
+		output/apps/sosu.hrb output/apps/sosu2.hrb output/apps/sosu3.hrb \
+		output/apps/typemkfl.hrb
 	mformat -f 1440 -B $< -C -i $@
 	mcopy $(filter-out $<, $^) -i $@ ::
 

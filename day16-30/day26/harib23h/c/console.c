@@ -57,6 +57,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
         );
         cons.cur_c = -1;
       }
+      if (data == 4) cmd_exit(&cons, fat);
       if (256 <= data && data <= 511) {  // Keyboard data from task_a
         data -= 256;
         if (data == 8) {  // Backspace

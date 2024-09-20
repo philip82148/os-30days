@@ -122,6 +122,7 @@ void HariMain() {
 
   int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
   int mmx = -1, mmy = -1, mmx2 = 0;
+  int new_mx = -1, new_my = 0, new_wx = 0x7fffffff, new_wy = 0;
   struct SHEET *sht = 0, *key_win = sht_cons[0];
   keywin_on(key_win);
 
@@ -138,8 +139,18 @@ void HariMain() {
     }
     io_cli();  // 一旦割り込み禁止
     if (fifo32_status(&fifo) == 0) {
-      task_sleep(task_a);
-      io_sti();  // 割り込み許可
+      if (new_mx >= 0) {
+        io_sti();
+        sheet_slide(sht_mouse, new_mx, new_my);
+        new_mx = -1;
+      } else if (new_wx != 0x7fffffff) {
+        io_sti();
+        sheet_slide(sht, new_wx, new_wy);
+        new_wx = 0x7fffffff;
+      } else {
+        task_sleep(task_a);
+        io_sti();
+      }
     } else {
       int data = fifo32_get(&fifo);
       io_sti();
@@ -213,6 +224,9 @@ void HariMain() {
           if (my > binfo->scrny - 1) my = binfo->scrny - 1;
 
           sheet_slide(sht_mouse, mx, my);
+          new_mx = mx;
+          new_my = my;
+
           // 左クリック
           if ((mdec.btn & 0x01) != 0) {
             if (mmx < 0) {
@@ -238,6 +252,7 @@ void HariMain() {
                       mmx = mx;
                       mmy = my;
                       mmx2 = sht->vx0;
+                      new_wy = sht->vy0;
                     }
                     // 閉じるボタンのクリック
                     if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {
@@ -257,18 +272,20 @@ void HariMain() {
               }
             } else {
               // ウインドウ移動モード
-
-              // マウスの移動量を計算して移動
               int x = mx - mmx;
               int y = my - mmy;
               sheet_slide(sht, (mmx2 + x + 2) & ~3, sht->vy0 + y);
-
-              // 移動先の座標に更新
+              new_wx = (mmx2 + x + 2) & ~3;
+              new_wy = new_wy + y;
               mmy = my;
             }
           } else {
             // 左ボタンを押していない
             mmx = -1;  // 通常モードにする
+            if (new_wx != 0x7fffffff) {
+              sheet_slide(sht, new_wx, new_wy);
+              new_wx = 0x7fffffff;
+            }
           }
         }
       }

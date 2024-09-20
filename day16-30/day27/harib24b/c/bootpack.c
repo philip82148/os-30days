@@ -261,6 +261,10 @@ void HariMain() {
                         task_run(task, -1, 0);
                       } else {  // Console
                         struct TASK *task = sht->task;
+                        sheet_updown(sht, -1);  // Hide first
+                        keywin_off(key_win);
+                        key_win = shtctl->sheets[shtctl->top - 1];
+                        keywin_on(key_win);
                         io_cli();
                         fifo32_put(&task->fifo, 4);
                         io_sti();

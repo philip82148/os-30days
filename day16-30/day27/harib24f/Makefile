@@ -16,14 +16,16 @@ run: $(IMG)
 rerun: re run
 .PHONY: rerun
 
-$(IMG): output/ipl.bin output/haribote.sys ipl.nasm output/apps/hello.hrb output/apps/hello2.hrb \
+$(IMG): output/ipl.bin output/haribote.sys ipl.nasm \
         output/apps/hello3.hrb output/apps/a.hrb output/apps/hello4.hrb output/apps/hello5.hrb \
 		output/apps/winhelo.hrb output/apps/winhelo2.hrb output/apps/winhelo3.hrb output/apps/star1.hrb \
 		output/apps/stars.hrb output/apps/star2.hrb output/apps/lines.hrb output/apps/walk.hrb \
-		output/apps/noodle.hrb output/apps/beepdown.hrb output/apps/color.hrb output/apps/color2.hrb \
-		output/apps/crack7.hrb
+		output/apps/noodle.hrb output/apps/beepdown.hrb output/apps/color.hrb output/apps/color2.hrb
 	mformat -f 1440 -B $< -C -i $@
 	mcopy $(filter-out $<, $^) Makefile -i $@ ::
+
+output/libapi.a : $(API_OBJECTS)
+	ar rcs $@ $^
 
 output/haribote.sys: output/asmhead.bin output/bootpack.hrb
 	cat $^ > $@
@@ -39,13 +41,9 @@ output/%.hrb: app.ld output/%.obj
 	mkdir -p $(@D)
 	gcc -nostdlib -m32 -fno-pie -g -T $^ -o $@
 
-output/%.hrb: %.nas
+output/%.hrb: output/libapi.a app.ld output/%.o $(LIB_OBJECTS)
 	mkdir -p $(@D)
-	nasm $< -o $@ -l output/$*.lst
-
-output/%.hrb : app.ld output/%.o $(LIB_OBJECTS) $(API_OBJECTS)
-	mkdir -p $(@D)
-	gcc -nostdlib -m32 -fno-pie -g -T $^ -o $@
+	gcc -nostdlib -m32 -fno-pie -g -T $(filter-out $<, $^) -Loutput -lapi -o $@
 
 output/%.o: %.c
 	mkdir -p $(@D)

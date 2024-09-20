@@ -23,6 +23,7 @@
     "farjmp",
     "fifobuf",
     "FREEINFO",
+    "freetimer",
     "gatedesc",
     "gdtidt",
     "gdtr",

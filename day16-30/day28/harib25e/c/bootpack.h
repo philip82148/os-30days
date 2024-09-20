@@ -73,6 +73,8 @@ int fifo32_status(struct FIFO32 *fifo);
 #define COL8_008484 14
 #define COL8_848484 15
 
+extern unsigned char hankaku[4096];
+
 void init_palette();
 void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
@@ -246,6 +248,7 @@ struct TASK {
   struct FILEHANDLE *fhandle;
   int *fat;
   char *cmdline;
+  char langmode;
 };
 
 struct TASKLEVEL {
@@ -302,6 +305,7 @@ void cmd_dir(struct CONSOLE *cons);
 void cmd_exit(struct CONSOLE *cons, int *fat);
 void cmd_start(struct CONSOLE *cons, const char *cmdline, int memtotal);
 void cmd_ncst(struct CONSOLE *cons, char *cmdline, int memtotal);
+void cmd_langmode(struct CONSOLE *cons, char *cmdline);
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);
 void hrb_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);
 

@@ -93,10 +93,20 @@ void putfont8(unsigned char *vram, int xsize, int x, int y, unsigned char c, uns
 }
 
 void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c, const char *s) {
-  extern unsigned char hankaku[4096];
-  for (; *s != 0x00; s++) {
-    putfont8(vram, xsize, x, y, c, hankaku + ((unsigned char)*s) * 16);
-    x += 8;
+  struct TASK *task = task_now();
+  unsigned char *nihongo = (unsigned char *)*((int *)0x0fe8);
+
+  if (task->langmode == 0) {
+    for (; *s != 0x00; s++) {
+      putfont8(vram, xsize, x, y, c, hankaku + ((unsigned char)*s) * 16);
+      x += 8;
+    }
+  }
+  if (task->langmode == 1) {
+    for (; *s != 0x00; s++) {
+      putfont8(vram, xsize, x, y, c, nihongo + ((unsigned char)*s) * 16);
+      x += 8;
+    }
   }
 }
 

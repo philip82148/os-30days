@@ -71,6 +71,7 @@ void HariMain() {
   fifo.task = task_a;
   task_run(task_a, 1, 2);
   *((int *)0x0fe4) = (int)shtctl;
+  task_a->langmode = 0;
 
   // sht_back
   struct SHEET *sht_back = sheet_alloc(shtctl);
@@ -105,6 +106,21 @@ void HariMain() {
   // 最初にキーボード状態との食い違いがないように設定する
   fifo32_put(&keycmd, KEYCMD_LED);
   fifo32_put(&keycmd, key_leds);
+
+  // Read nihongo.fnt
+  unsigned char *nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
+  int *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
+  file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
+  struct FILEINFO *finfo =
+      file_search("nihongo.fnt", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+  if (finfo != 0) {
+    file_loadfile(finfo->clustno, finfo->size, nihongo, fat, (char *)(ADR_DISKIMG + 0x003e00));
+  } else {
+    for (int i = 0; i < 16 * 256; i++) nihongo[i] = hankaku[i];  // Copy hankaku characters
+    for (int i = 16 * 256; i < 16 * 256 + 32 * 94 * 47; i++) nihongo[i] = 0xff;  // fill with 0xff
+  }
+  *((int *)0x0fe8) = (int)nihongo;
+  memman_free_4k(memman, (int)fat, 4 * 2880);
 
   for (;;) {
     if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {

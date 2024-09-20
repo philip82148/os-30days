@@ -17,6 +17,13 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
   task->cons = &cons;
   task->cmdline = cmdline;
 
+  unsigned char *nihongo = (unsigned char *)*((int *)0x0fe8);
+  if (nihongo[4096] != 0xff) {
+    task->langmode = 1;
+  } else {
+    task->langmode = 0;
+  }
+
   if (cons.sht != 0) {
     cons.timer = timer_alloc();
     timer_init(cons.timer, &task->fifo, 1);
@@ -175,6 +182,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
     cmd_start(cons, cmdline, memtotal);
   } else if (my_strncmp(cmdline, "ncst ", 5) == 0) {
     cmd_ncst(cons, cmdline, memtotal);
+  } else if (my_strncmp(cmdline, "langmode ", 9) == 0) {
+    cmd_langmode(cons, cmdline);
   } else if (cmdline[0] != 0) {
     // Not command, app, empty line
     if (cmd_app(cons, fat, cmdline) == 0) cons_putstr0(cons, "Bad command.\n\n");
@@ -257,6 +266,18 @@ void cmd_ncst(struct CONSOLE *cons, char *cmdline, int memtotal) {
   }
   fifo32_put(fifo, 10 + 256);
   cons_newline(cons);
+}
+
+void cmd_langmode(struct CONSOLE *cons, char *cmdline) {
+  struct TASK *task = task_now();
+  unsigned char mode = cmdline[9] - '0';
+  if (mode <= 1) {
+    task->langmode = mode;
+  } else {
+    cons_putstr0(cons, "mode number error.\n");
+  }
+  cons_newline(cons);
+  return;
 }
 
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline) {

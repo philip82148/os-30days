@@ -1,7 +1,7 @@
 [BITS 32]
     GLOBAL api_putchar
     GLOBAL api_putstr0
-	GLOBAL api_end
+    GLOBAL api_end
 
 [SECTION .text]
 api_putchar:
@@ -11,13 +11,13 @@ api_putchar:
     RET
 
 api_putstr0: ; void api_putstr0(char *s)
-	PUSH EBX
-	MOV  EDX, 2
-	MOV  EBX, [ESP+8] ; s
-	INT  0x40
-	POP  EBX
-	RET
+    PUSH EBX
+    MOV  EDX, 2
+    MOV  EBX, [ESP+8] ; s
+    INT  0x40
+    POP  EBX
+    RET
 
 api_end:
-	MOV EDX, 4
-	INT 0x40
+    MOV EDX, 4
+    INT 0x40

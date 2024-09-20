@@ -11,7 +11,7 @@ rerun: re run
 .PHONY: rerun
 
 $(IMG): output/ipl.bin output/haribote.sys ipl.nasm output/apps/hello.hrb output/apps/hello2.hrb \
-        output/apps/hello3.hrb output/apps/a.hrb output/apps/crack1.hrb output/apps/crack2.hrb
+		output/apps/hello3.hrb output/apps/a.hrb output/apps/crack1.hrb output/apps/crack2.hrb
 	mformat -f 1440 -B output/ipl.bin -C -i $@
 	mcopy output/haribote.sys ipl.nasm output/apps/hello.hrb output/apps/hello2.hrb output/apps/hello3.hrb \
 		output/apps/a.hrb output/apps/crack1.hrb output/apps/crack2.hrb Makefile -i $@ ::

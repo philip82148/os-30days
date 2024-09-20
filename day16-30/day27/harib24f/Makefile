@@ -17,7 +17,7 @@ rerun: re run
 .PHONY: rerun
 
 $(IMG): output/ipl.bin output/haribote.sys ipl.nasm \
-        output/apps/hello3.hrb output/apps/a.hrb output/apps/hello4.hrb output/apps/hello5.hrb \
+		output/apps/hello3.hrb output/apps/a.hrb output/apps/hello4.hrb output/apps/hello5.hrb \
 		output/apps/winhelo.hrb output/apps/winhelo2.hrb output/apps/winhelo3.hrb output/apps/star1.hrb \
 		output/apps/stars.hrb output/apps/star2.hrb output/apps/lines.hrb output/apps/walk.hrb \
 		output/apps/noodle.hrb output/apps/beepdown.hrb output/apps/color.hrb output/apps/color2.hrb

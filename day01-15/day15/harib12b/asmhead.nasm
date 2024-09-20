@@ -1,23 +1,23 @@
 ; haribote-os
 
-VBEMODE EQU	0x105
-;	0x100 :  640 x  400 x 8bit
-;	0x101 :  640 x  480 x 8bit
-;	0x103 :  800 x  600 x 8bit
-;	0x105 : 1024 x  768 x 8bit
-;	0x107 : 1280 x 1024 x 8bit
+VBEMODE EQU    0x105
+;    0x100 :  640 x  400 x 8bit
+;    0x101 :  640 x  480 x 8bit
+;    0x103 :  800 x  600 x 8bit
+;    0x105 : 1024 x  768 x 8bit
+;    0x107 : 1280 x 1024 x 8bit
 
-BOTPAK  EQU	0x00280000
-DSKCAC  EQU	0x00100000
-DSKCAC0 EQU	0x00008000
+BOTPAK  EQU    0x00280000
+DSKCAC  EQU    0x00100000
+DSKCAC0 EQU    0x00008000
 
 ; BOOT_INFO
-CYLS    EQU 0x0ff0     ; ブートセクタが設定する
+CYLS    EQU 0x0ff0        ; ブートセクタが設定する
 LEDS    EQU 0x0ff1
-VMODE   EQU 0x0ff2     ; 色数に関する情報。何ビットカラーか?
-SCRNX   EQU 0x0ff4     ; 解像度のX
-SCRNY   EQU 0x0ff6     ; 解像度のY
-VRAM    EQU 0x0ff8     ; グラフィックバッファの開始番地
+VMODE   EQU 0x0ff2        ; 色数に関する情報。何ビットカラーか?
+SCRNX   EQU 0x0ff4        ; 解像度のX
+SCRNY   EQU 0x0ff6        ; 解像度のY
+VRAM    EQU 0x0ff8        ; グラフィックバッファの開始番地
 
     ORG 0xc200
 

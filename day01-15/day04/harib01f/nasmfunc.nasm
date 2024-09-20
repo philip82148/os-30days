@@ -15,52 +15,52 @@ io_hlt: ; void io_hlt();
     RET
 
 io_cli: ; void io_cli();
-	CLI
-	RET
+    CLI
+    RET
 
 io_sti: ; void io_sti();
-	STI
-	RET
+    STI
+    RET
 
 io_stihlt: ; void io_stihlt();
-	STI
-	HLT
-	RET
+    STI
+    HLT
+    RET
 
 io_in8: ; int io_in8(int port);
-	MOV EDX, [ESP+4]
-	MOV EAX, 0
-	IN  AL,  DX
-	RET
+    MOV EDX, [ESP+4]
+    MOV EAX, 0
+    IN  AL,  DX
+    RET
 
 io_in16: ; int io_in16(int port);
-	MOV EDX, [ESP+4]
-	MOV EAX, 0
-	IN  AX,  DX
-	RET
+    MOV EDX, [ESP+4]
+    MOV EAX, 0
+    IN  AX,  DX
+    RET
 
 io_in32: ; int io_in32(int port);
-	MOV EDX, [ESP+4]
-	IN  EAX, DX
-	RET
+    MOV EDX, [ESP+4]
+    IN  EAX, DX
+    RET
 
 io_out8: ; void io_out8(int port, int data);
-	MOV EDX, [ESP+4]
-	MOV AL,  [ESP+8]
-	OUT DX,  AL
-	RET
+    MOV EDX, [ESP+4]
+    MOV AL,  [ESP+8]
+    OUT DX,  AL
+    RET
 
 io_out16: ; void io_out16(int port, int data);
-	MOV EDX, [ESP+4]
-	MOV EAX, [ESP+8]
-	OUT DX,  AX
-	RET
+    MOV EDX, [ESP+4]
+    MOV EAX, [ESP+8]
+    OUT DX,  AX
+    RET
 
 io_out32: ; void io_out32(int port, int data);
-	MOV EDX, [ESP+4]
-	MOV EAX, [ESP+8]
-	OUT DX,  EAX
-	RET
+    MOV EDX, [ESP+4]
+    MOV EAX, [ESP+8]
+    OUT DX,  EAX
+    RET
 
 io_load_eflags: ; void io_load_eflags();
     PUSHFD

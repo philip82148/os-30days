@@ -1,6 +1,6 @@
 [BITS 32]
     GLOBAL api_putchar
-	GLOBAL api_end
+    GLOBAL api_end
 
 [SECTION .text]
 api_putchar:
@@ -10,5 +10,5 @@ api_putchar:
     RET
 
 api_end:
-	MOV EDX, 4
-	INT 0x40
+    MOV EDX, 4
+    INT 0x40

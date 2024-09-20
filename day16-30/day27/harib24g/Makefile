@@ -17,7 +17,7 @@ rerun: re run
 .PHONY: rerun
 
 $(IMG): output/ipl.bin output/haribote.sys ipl.nasm Makefile output/apps/a.hrb \
-        output/apps/hello3.hrb output/apps/hello4.hrb output/apps/hello5.hrb \
+		output/apps/hello3.hrb output/apps/hello4.hrb output/apps/hello5.hrb \
 		output/apps/winhelo.hrb output/apps/winhelo2.hrb output/apps/winhelo3.hrb \
 		output/apps/star1.hrb output/apps/stars.hrb output/apps/stars2.hrb \
 		output/apps/lines.hrb output/apps/walk.hrb \
@@ -43,7 +43,7 @@ output/bootpack.hrb: output/liblib.a bootpack.lds output/c/bootpack.o output/nas
 					 output/c/sheet.o output/c/timer.o output/c/mtask.o output/c/window.o \
 					 output/c/console.o output/c/file.o
 	gcc -nostdlib -m32 -fno-pie -Wl,-Map=output/bootpack.map -g -T $(filter-out %.a, $^) \
-	    -Loutput -llib -o $@
+		-Loutput -llib -o $@
 
 output/%.o: %.c
 	mkdir -p $(@D)

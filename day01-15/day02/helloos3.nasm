@@ -52,7 +52,7 @@ fin:
 
 msg:
     DB 0x0a, 0x0a     ; "\n\n"
-	DB "hello, world"
+    DB "hello, world"
     DB 0x0a           ; "\n"
     DB 0
 

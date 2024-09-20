@@ -42,6 +42,7 @@
     "keyfifo",
     "KEYSTA",
     "keywin",
+    "langbyte",
     "langmode",
     "ldtr",
     "leds",

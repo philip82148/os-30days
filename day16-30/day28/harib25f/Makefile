@@ -16,6 +16,7 @@ APPS=output/apps/a.hrb output/apps/hello3.hrb output/apps/hello4.hrb output/apps
 	 output/apps/sosu.hrb output/apps/sosu2.hrb output/apps/sosu3.hrb \
 	 output/apps/typemkfl.hrb output/apps/type.hrb \
 	 output/apps/iroha.hrb
+SAMPLE_TXTS=ipl.nasm Makefile ../../sample_txts/shiftjis.txt ../../sample_txts/utf8.txt
 
 all: $(IMG)
 .PHONY: all
@@ -27,7 +28,7 @@ run: $(IMG)
 rerun: re run
 .PHONY: rerun
 
-$(IMG): output/ipl.bin output/haribote.sys ipl.nasm Makefile $(APPS) ../../fonts/nihongo.fnt
+$(IMG): output/ipl.bin output/haribote.sys $(SAMPLE_TXTS) $(APPS) ../../fonts/nihongo.fnt
 	mformat -f 1440 -B $< -C -i $@
 	mcopy $(filter-out $<, $^) -i $@ ::
 

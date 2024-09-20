@@ -98,13 +98,44 @@ void putfonts8_asc(unsigned char *vram, int xsize, int x, int y, unsigned char c
 
   if (task->langmode == 0) {
     for (; *s != 0x00; s++) {
-      putfont8(vram, xsize, x, y, c, hankaku + ((unsigned char)*s) * 16);
+      unsigned char s_unsigned = *s;
+      putfont8(vram, xsize, x, y, c, hankaku + s_unsigned * 16);
       x += 8;
     }
   }
   if (task->langmode == 1) {
     for (; *s != 0x00; s++) {
-      putfont8(vram, xsize, x, y, c, nihongo + ((unsigned char)*s) * 16);
+      if (task->langbyte1 == 0) {
+        unsigned char s_unsigned = *s;
+        if ((0x81 <= s_unsigned && s_unsigned <= 0x9f)
+            || (0xe0 <= s_unsigned && s_unsigned <= 0xfc)) {
+          task->langbyte1 = s_unsigned;
+        } else {
+          putfont8(vram, xsize, x, y, c, nihongo + s_unsigned * 16);
+        }
+      } else {
+        int k;
+        if (0x81 <= task->langbyte1 && task->langbyte1 <= 0x9f) {
+          k = (task->langbyte1 - 0x81) * 2;
+        } else {
+          k = (task->langbyte1 - 0xe0) * 2 + 62;
+        }
+
+        int t;
+        unsigned char s_unsigned = *s;
+        if (0x40 <= s_unsigned && s_unsigned <= 0x7e) {
+          t = s_unsigned - 0x40;
+        } else if (0x80 <= s_unsigned && s_unsigned <= 0x9e) {
+          t = s_unsigned - 0x80 + 63;
+        } else {
+          t = s_unsigned - 0x9f;
+          k++;
+        }
+        task->langbyte1 = 0;
+        unsigned char *font = nihongo + 256 * 16 + (k * 94 + t) * 32;
+        putfont8(vram, xsize, x - 8, y, c, font);   // Left half
+        putfont8(vram, xsize, x, y, c, font + 16);  // Right half
+      }
       x += 8;
     }
   }

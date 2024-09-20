@@ -73,3 +73,10 @@ clean:
 
 re: clean all
 .PHONY: re
+.PHONY: exists
+exists:
+ifneq ("$(wildcard $(IMG))", "")
+	@echo "true"
+else
+	@echo "false"
+endif

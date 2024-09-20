@@ -256,6 +256,7 @@ struct TASKCTL {
   struct TASK tasks0[MAX_TASKS];
 };
 
+extern struct TASKCTL *taskctl;
 extern struct TIMER *task_timer;
 struct TASK *task_now();
 struct TASK *task_init(struct MEMMAN *memman);
@@ -289,6 +290,7 @@ void cmd_dir(struct CONSOLE *cons);
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);
 void cmd_exit(struct CONSOLE *cons, int *fat);
 void cmd_start(struct CONSOLE *cons, const char *cmdline, int memtotal);
+void cmd_ncst(struct CONSOLE *cons, char *cmdline, int memtotal);
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);
 void hrb_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);
 
@@ -306,4 +308,5 @@ void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
 
 // bootpack.c -------------------------------------------------------------------------------------
+struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);

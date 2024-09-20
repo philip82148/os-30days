@@ -9,11 +9,13 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
 
   // Display prompt
   struct CONSOLE cons;
+  char cmdline[30];
   cons.sht = sheet;
   cons.cur_x = 8;
   cons.cur_y = 28;
   cons.cur_c = -1;
   task->cons = &cons;
+  task->cmdline = cmdline;
 
   if (cons.sht != 0) {
     cons.timer = timer_alloc();
@@ -32,7 +34,6 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
   task->fhandle = fhandle;
   task->fat = fat;
 
-  char cmdline[30];
   for (;;) {
     io_cli();
     if (fifo32_status(&task->fifo) == 0) {
@@ -168,8 +169,6 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
     cmd_cls(cons);
   } else if (my_strcmp(cmdline, "dir") == 0 && cons->sht != 0) {
     cmd_dir(cons);
-  } else if (my_strncmp(cmdline, "type ", 5) == 0 && cons->sht != 0) {
-    cmd_type(cons, fat, cmdline);
   } else if (my_strcmp(cmdline, "exit") == 0) {
     cmd_exit(cons, fat);
   } else if (my_strncmp(cmdline, "start ", 6) == 0) {
@@ -215,22 +214,6 @@ void cmd_dir(struct CONSOLE *cons) {
         cons_putstr0(cons, s);
       }
     }
-  }
-  cons_newline(cons);
-}
-
-void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline) {
-  struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
-  struct FILEINFO *finfo =
-      file_search(cmdline + 5, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
-
-  if (finfo != 0) {  // Found the file
-    char *p = (char *)memman_alloc_4k(memman, finfo->size);
-    file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-    cons_putstr1(cons, p, finfo->size);
-    memman_free_4k(memman, (int)p, finfo->size);
-  } else {  // Didn't find the file
-    cons_putstr0(cons, "File not found.\n");
   }
   cons_newline(cons);
 }
@@ -514,6 +497,15 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
       }
       *((char *)ebx + ds_base + i) = fh->buf[fh->pos];
       fh->pos++;
+    }
+    reg[7] = i;
+  } else if (edx == 26) {  // Command line
+    int i = 0;
+    for (;;) {
+      *((char *)ebx + ds_base + i) = task->cmdline[i];
+      if (task->cmdline[i] == 0) break;
+      if (i >= ecx) break;
+      i++;
     }
     reg[7] = i;
   }

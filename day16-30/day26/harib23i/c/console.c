@@ -157,6 +157,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
     cmd_type(cons, fat, cmdline);
   } else if (my_strcmp(cmdline, "exit") == 0) {
     cmd_exit(cons, fat);
+  } else if (my_strncmp(cmdline, "start ", 6) == 0) {
+    cmd_start(cons, cmdline, memtotal);
   } else if (cmdline[0] != 0) {
     if (cmd_app(cons, fat, cmdline) == 0) cons_putstr0(cons, "Bad command.\n\n");
   }
@@ -226,6 +228,18 @@ void cmd_exit(struct CONSOLE *cons, int *fat) {
   fifo32_put(fifo, cons->sht - shtctl->sheets0 + 768);  // 768~1023
   io_sti();
   for (;;) task_sleep(task);
+}
+
+void cmd_start(struct CONSOLE *cons, const char *cmdline, int memtotal) {
+  struct SHTCTL *shtctl = (struct SHTCTL *)*((int *)0x0fe4);
+  struct SHEET *sht = open_console(shtctl, memtotal);
+  struct FIFO32 *fifo = &sht->task->fifo;
+  sheet_slide(sht, 32, 4);
+  sheet_updown(sht, shtctl->top);
+  // Put command letters to a new console
+  for (int i = 6; cmdline[i] != 0; i++) fifo32_put(fifo, cmdline[i] + 256);
+  fifo32_put(fifo, 10 + 256);  // Enter
+  cons_newline(cons);
 }
 
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline) {

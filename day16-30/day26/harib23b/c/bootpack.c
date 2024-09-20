@@ -121,7 +121,7 @@ void HariMain() {
   sheet_updown(sht_mouse, 3);
 
   int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
-  int mmx = -1, mmy = -1;
+  int mmx = -1, mmy = -1, mmx2 = 0;
   struct SHEET *sht = 0, *key_win = sht_cons[0];
   keywin_on(key_win);
 
@@ -237,6 +237,7 @@ void HariMain() {
                       // ウインドウ移動モードにする
                       mmx = mx;
                       mmy = my;
+                      mmx2 = sht->vx0;
                     }
                     // 閉じるボタンのクリック
                     if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {
@@ -260,10 +261,9 @@ void HariMain() {
               // マウスの移動量を計算して移動
               int x = mx - mmx;
               int y = my - mmy;
-              sheet_slide(sht, sht->vx0 + x, sht->vy0 + y);
+              sheet_slide(sht, (mmx2 + x + 2) & ~3, sht->vy0 + y);
 
               // 移動先の座標に更新
-              mmx = mx;
               mmy = my;
             }
           } else {

@@ -68,11 +68,22 @@ void sheet_refreshmap(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1, in
     if (sht_x1 > sht->bxsize) sht_x1 = sht->bxsize;
     if (sht_y1 > sht->bysize) sht_y1 = sht->bysize;
     if (sht->col_inv == -1) {
-      for (int sht_y = sht_y0; sht_y < sht_y1; sht_y++) {
-        int vy = sht->vy0 + sht_y;
-        for (int sht_x = sht_x0; sht_x < sht_x1; sht_x++) {
-          int vx = sht->vx0 + sht_x;
-          ctl->map[vy * ctl->xsize + vx] = sht_id;
+      if ((sht->vx0 & 3) == 0 && (sht_x0 & 3) == 0 && (sht_x1 & 3) == 0) {  // 4-byte
+        sht_x1 = (sht_x1 - sht_x0) / 4;                                     // number of MOV
+        int sht_id4 = sht_id | sht_id << 8 | sht_id << 16 | sht_id << 24;
+        for (int sht_y = sht_y0; sht_y < sht_y1; sht_y++) {
+          int vy = sht->vy0 + sht_y;
+          int vx = sht->vx0 + sht_x0;
+          int *p = (int *)&ctl->map[vy * ctl->xsize + vx];
+          for (int sht_x = 0; sht_x < sht_x1; sht_x++) p[sht_x] = sht_id4;
+        }
+      } else {  // 1-byte
+        for (int sht_y = sht_y0; sht_y < sht_y1; sht_y++) {
+          int vy = sht->vy0 + sht_y;
+          for (int sht_x = sht_x0; sht_x < sht_x1; sht_x++) {
+            int vx = sht->vx0 + sht_x;
+            ctl->map[vy * ctl->xsize + vx] = sht_id;
+          }
         }
       }
     } else {  // Has transparency

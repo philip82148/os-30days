@@ -36,13 +36,13 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
       io_sti();
       if (data <= 1) {  // Timer for cursor
         if (data) {
-          timer_init(timer, &task->fifo, 0);
+          timer_init(cons.timer, &task->fifo, 0);
           if (cons.cur_c >= 0) cons.cur_c = COL8_FFFFFF;
         } else {
-          timer_init(timer, &task->fifo, 1);
+          timer_init(cons.timer, &task->fifo, 1);
           if (cons.cur_c >= 0) cons.cur_c = COL8_000000;
         }
-        timer_settime(timer, 50);
+        timer_settime(cons.timer, 50);
       }
       if (data == 2) cons.cur_c = COL8_FFFFFF;  // Cursor ON
       if (data == 3) {                          // Cursor OFF

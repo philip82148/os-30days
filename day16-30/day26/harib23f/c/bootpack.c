@@ -75,11 +75,7 @@ void HariMain() {
   sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);  // 透明色無し
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
 
-  // sht_cons
-  struct SHEET *sht_cons[2];
-  sht_cons[0] = open_console(shtctl, memtotal);
-  sht_cons[1] = 0;
-
+  // sht_mouse
   unsigned char buf_mouse[256];
   struct SHEET *sht_mouse = sheet_alloc(shtctl);
   sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);  // Transparent Number is 99
@@ -87,18 +83,20 @@ void HariMain() {
   int mx = (binfo->scrnx - 16) / 2;  // 画面中心になるように
   int my = (binfo->scrny - 28 - 16) / 2;
 
-  sheet_slide(sht_back, 0, 0);
-  sheet_slide(sht_cons[0], 32, 4);
-  sheet_slide(sht_mouse, mx, my);
-
-  sheet_updown(sht_back, 0);
-  sheet_updown(sht_cons[0], 1);
-  sheet_updown(sht_mouse, 2);
-
   int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
   int mmx = -1, mmy = -1, mmx2 = 0;
   int new_mx = -1, new_my = 0, new_wx = 0x7fffffff, new_wy = 0;
-  struct SHEET *sht = 0, *key_win = sht_cons[0];
+  struct SHEET *sht = 0;
+
+  // sht_cons
+  struct SHEET *key_win = open_console(shtctl, memtotal);
+
+  sheet_slide(sht_back, 0, 0);
+  sheet_slide(key_win, 32, 4);
+  sheet_slide(sht_mouse, mx, my);
+  sheet_updown(sht_back, 0);
+  sheet_updown(key_win, 1);
+  sheet_updown(sht_mouse, 2);
   keywin_on(key_win);
 
   // 最初にキーボード状態との食い違いがないように設定する
@@ -176,12 +174,11 @@ void HariMain() {
             io_sti();
           }
         }
-        if (data == 0x3c && key_shift != 0 && sht_cons[1] == 0) {  // Shift + F2
-          sht_cons[1] = open_console(shtctl, memtotal);
-          sheet_slide(sht_cons[1], 32, 4);
-          sheet_updown(sht_cons[1], shtctl->top);
+        if (data == 0x3c && key_shift != 0) {  // Shift + F2
           keywin_off(key_win);
-          key_win = sht_cons[1];
+          key_win = open_console(shtctl, memtotal);
+          sheet_slide(key_win, 32, 4);
+          sheet_updown(key_win, shtctl->top);
           keywin_on(key_win);
         }
         if (data == 0x57 && shtctl->top > 2)

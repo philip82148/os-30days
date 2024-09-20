@@ -1,5 +1,10 @@
 IMG=output/haribote-os.img
 LIB_OBJECTS=output/lib/my_sprintf.o output/lib/my_strcmp.o output/lib/my_strncmp.o
+API_OBJECTS=output/api/api001.obj output/api/api002.obj output/api/api003.obj output/api/api004.obj \
+			output/api/api005.obj output/api/api006.obj output/api/api007.obj output/api/api008.obj \
+			output/api/api009.obj output/api/api010.obj output/api/api011.obj output/api/api012.obj \
+			output/api/api013.obj output/api/api014.obj output/api/api015.obj output/api/api016.obj \
+			output/api/api017.obj output/api/api018.obj output/api/api019.obj output/api/api020.obj
 
 all: $(IMG)
 .PHONY: all
@@ -38,7 +43,7 @@ output/%.hrb: %.nas
 	mkdir -p $(@D)
 	nasm $< -o $@ -l output/$*.lst
 
-output/%.hrb : app.ld output/%.o output/a_nasm.obj $(LIB_OBJECTS)
+output/%.hrb : app.ld output/%.o $(LIB_OBJECTS) $(API_OBJECTS)
 	mkdir -p $(@D)
 	gcc -nostdlib -m32 -fno-pie -g -T $^ -o $@
 

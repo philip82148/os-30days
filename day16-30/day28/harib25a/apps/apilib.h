@@ -18,3 +18,8 @@ void api_inittimer(int timer, int data);
 void api_settimer(int timer, int time);
 void api_freetimer(int timer);
 void api_beep(int tone);
+
+// lib --------------------------------------------------------------------------------------------
+void my_sprintf(char *str, const char *fmt, ...);
+int my_strcmp(const char *s1, const char *s2);
+int my_strncmp(const char *s1, const char *s2, int n);

@@ -48,9 +48,9 @@ int to_hex_asc(char *str, int len, char fill, bool is_upper, unsigned int num) {
   return len;
 }
 
-void my_sprintf(char *str, const char *fmt, ...) {
-  va_list list;
-  va_start(list, fmt);
+void my_vsprintf(char *str, const char *fmt, va_list list) {
+  va_list copy;
+  va_copy(copy, list);
 
   while (*fmt) {
     if (*fmt == '%') {
@@ -67,13 +67,13 @@ void my_sprintf(char *str, const char *fmt, ...) {
 
       switch (*fmt++) {
         case 'd':
-          str += to_dec_asc(str, len, fill, va_arg(list, int));
+          str += to_dec_asc(str, len, fill, va_arg(copy, int));
           continue;
         case 'x':
-          str += to_hex_asc(str, len, fill, false, va_arg(list, int));
+          str += to_hex_asc(str, len, fill, false, va_arg(copy, int));
           continue;
         case 'X':
-          str += to_hex_asc(str, len, fill, true, va_arg(list, int));
+          str += to_hex_asc(str, len, fill, true, va_arg(copy, int));
           continue;
         default:
           fmt = fmt_start;
@@ -84,5 +84,12 @@ void my_sprintf(char *str, const char *fmt, ...) {
   }
   *str = 0x00;
 
+  va_end(copy);
+}
+
+void my_sprintf(char *str, const char *fmt, ...) {
+  va_list list;
+  va_start(list, fmt);
+  my_vsprintf(str, fmt, list);
   va_end(list);
 }

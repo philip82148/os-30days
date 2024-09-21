@@ -1,4 +1,5 @@
-#include "apilib.h"
+#include "../include/apilib.h"
+#include "../include/mystdlib.h"
 
 void my_sprintf(char *str, const char *fmt, ...);
 

@@ -1,4 +1,5 @@
-#include "apilib.h"
+#include "../include/apilib.h"
+#include "../include/mystdlib.h"
 
 #define MAX 1000
 

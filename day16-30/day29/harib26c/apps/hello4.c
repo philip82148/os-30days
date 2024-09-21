@@ -1,4 +1,4 @@
-#include "apilib.h"
+#include "../include/apilib.h"
 
 void HariMain() {
   api_putstr0("hello, world\n");

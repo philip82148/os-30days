@@ -1,4 +1,4 @@
-#include "apilib.h"
+#include "../include/apilib.h"
 
 int rand();  // 0~32767
 

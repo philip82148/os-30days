@@ -1,5 +1,7 @@
 IMG=output/haribote-os.img
-LIB_OBJECTS=output/lib/my_sprintf.o output/lib/my_strcmp.o output/lib/my_strncmp.o output/lib/my_memcmp.o
+MYSTD_OBJECTS=output/lib/my_sprintf.o output/lib/my_strcmp.o output/lib/my_strncmp.o output/lib/my_memcmp.o \
+			output/mystd/my_putchar.o output/mystd/my_exit.o output/mystd/my_printf.o output/mystd/my_malloc.o \
+			output/mystd/my_free.o
 API_OBJECTS=output/api/api001.obj output/api/api002.obj output/api/api003.obj output/api/api004.obj \
 			output/api/api005.obj output/api/api006.obj output/api/api007.obj output/api/api008.obj \
 			output/api/api009.obj output/api/api010.obj output/api/api011.obj output/api/api012.obj \
@@ -40,20 +42,20 @@ output/%.hrb: app.lds output/%.obj
 	mkdir -p $(@D)
 	gcc -nostdlib -m32 -fno-pie -g -T $^ -o $@
 
-output/%.hrb: output/libapi.a output/liblib.a app.lds output/%.o
+output/%.hrb: output/libapi.a output/libmystd.a app.lds output/%.o
 	mkdir -p $(@D)
-	gcc -nostdlib -m32 -fno-pie -g -T $(filter-out %.a, $^) -Loutput -lapi -llib -o $@
+	gcc -nostdlib -m32 -fno-pie -g -T $(filter-out %.a, $^) -Loutput -lapi -lmystd -o $@
 
 output/haribote.sys: output/asmhead.bin output/bootpack.hrb
 	cat $^ > $@
 
-output/bootpack.hrb: output/liblib.a bootpack.lds output/c/bootpack.o output/nasmfunc.obj \
+output/bootpack.hrb: output/libmystd.a bootpack.lds output/c/bootpack.o output/nasmfunc.obj \
 					 output/hankaku.o output/c/graphic.o output/c/dsctbl.o output/c/int.o \
 					 output/c/fifo.o output/c/keyboard.o output/c/mouse.o output/c/memory.o \
 					 output/c/sheet.o output/c/timer.o output/c/mtask.o output/c/window.o \
 					 output/c/console.o output/c/file.o output/c/tek.o
 	gcc -nostdlib -m32 -fno-pie -Wl,-Map=output/bootpack.map -g -T $(filter-out %.a, $^) \
-		-Loutput -llib -o $@
+		-Loutput -lmystd -o $@
 
 output/%.o: %.c
 	mkdir -p $(@D)
@@ -85,7 +87,7 @@ output/libapi.a : $(API_OBJECTS)
 	mkdir -p $(@D)
 	ar rcs $@ $^
 
-output/liblib.a : $(LIB_OBJECTS)
+output/libmystd.a : $(MYSTD_OBJECTS)
 	mkdir -p $(@D)
 	ar rcs $@ $^
 

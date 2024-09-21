@@ -1,7 +1,7 @@
 #include "../include/apilib.h"
 #include "../include/mystdlib.h"
 
-void my_sprintf(char *str, const char *fmt, ...);
+int my_sprintf(char *str, const char *fmt, ...);
 
 void HariMain() {
   char s[12];

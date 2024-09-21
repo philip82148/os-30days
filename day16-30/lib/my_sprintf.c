@@ -48,7 +48,8 @@ int to_hex_asc(char *str, int len, char fill, bool is_upper, unsigned int num) {
   return len;
 }
 
-void my_vsprintf(char *str, const char *fmt, va_list list) {
+int my_vsprintf(char *str, const char *fmt, va_list list) {
+  const char *begin = str;
   va_list copy;
   va_copy(copy, list);
 
@@ -85,11 +86,13 @@ void my_vsprintf(char *str, const char *fmt, va_list list) {
   *str = 0x00;
 
   va_end(copy);
+  return str - begin;
 }
 
-void my_sprintf(char *str, const char *fmt, ...) {
+int my_sprintf(char *str, const char *fmt, ...) {
   va_list list;
   va_start(list, fmt);
-  my_vsprintf(str, fmt, list);
+  int len = my_vsprintf(str, fmt, list);
   va_end(list);
+  return len;
 }

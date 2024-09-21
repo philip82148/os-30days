@@ -3,7 +3,7 @@
  */
 
 // lib --------------------------------------------------------------------------------------------
-void my_sprintf(char *str, const char *fmt, ...);
+int my_sprintf(char *str, const char *fmt, ...);
 int my_strcmp(const char *s1, const char *s2);
 int my_strncmp(const char *s1, const char *s2, int n);
 int my_memcmp(const void *d, const void *s, unsigned long sz);

@@ -9,7 +9,7 @@ void api_inittimer(int timer, int data);
 void api_settimer(int timer, int time);
 void api_end();
 
-void my_sprintf(char *str, const char *fmt, ...);
+int my_sprintf(char *str, const char *fmt, ...);
 
 void HariMain() {
   char s[12];

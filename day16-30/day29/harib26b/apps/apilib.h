@@ -27,6 +27,6 @@ int api_cmdline(char *buf, int maxsize);
 int api_getlang();
 
 // lib --------------------------------------------------------------------------------------------
-void my_sprintf(char *str, const char *fmt, ...);
+int my_sprintf(char *str, const char *fmt, ...);
 int my_strcmp(const char *s1, const char *s2);
 int my_strncmp(const char *s1, const char *s2, int n);

@@ -25,6 +25,6 @@ int api_fsize(int fhandle, int mode);
 int api_fread(char *buf, int maxsize, int fhandle);
 
 // lib --------------------------------------------------------------------------------------------
-void my_sprintf(char *str, const char *fmt, ...);
+int my_sprintf(char *str, const char *fmt, ...);
 int my_strcmp(const char *s1, const char *s2);
 int my_strncmp(const char *s1, const char *s2, int n);

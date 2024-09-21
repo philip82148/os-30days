@@ -3,7 +3,7 @@
  */
 
 // lib/my_sprint.c --------------------------------------------------------------------------------
-void my_sprintf(char *str, const char *fmt, ...);
+int my_sprintf(char *str, const char *fmt, ...);
 
 // asmhead.nas ------------------------------------------------------------------------------------
 #define ADR_BOOTINFO 0x00000ff0

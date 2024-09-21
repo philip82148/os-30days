@@ -414,6 +414,16 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
     struct SHEET *sht = (struct SHEET *)(ebx & 0xfffffffe);
     hrb_api_linewin(sht, eax, ecx, esi, edi, ebp);
     if ((ebx & 1) == 0) {
+      if (eax > esi) {
+        int tmp = eax;
+        eax = esi;
+        esi = tmp;
+      }
+      if (ecx > edi) {
+        int tmp = ecx;
+        ecx = edi;
+        edi = tmp;
+      }
       sheet_refresh(sht, eax, ecx, esi + 1, edi + 1);
     }
   } else if (edx == 14) {

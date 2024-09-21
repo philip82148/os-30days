@@ -1,7 +1,7 @@
 IMG=output/haribote-os.img
 MYSTD_OBJECTS=output/lib/my_sprintf.o output/lib/my_strcmp.o output/lib/my_strncmp.o output/lib/my_memcmp.o \
 			output/mystd/my_putchar.o output/mystd/my_exit.o output/mystd/my_printf.o output/mystd/my_malloc.o \
-			output/mystd/my_free.o
+			output/mystd/my_free.o output/lib/my_strlen.o
 API_OBJECTS=output/api/api001.obj output/api/api002.obj output/api/api003.obj output/api/api004.obj \
 			output/api/api005.obj output/api/api006.obj output/api/api007.obj output/api/api008.obj \
 			output/api/api009.obj output/api/api010.obj output/api/api011.obj output/api/api012.obj \
@@ -18,7 +18,7 @@ APPS=output/apps/a.tek output/apps/hello3.tek output/apps/hello4.tek output/apps
 	 output/apps/sosu.tek output/apps/sosu2.tek output/apps/sosu3.tek \
 	 output/apps/typemkfl.tek output/apps/type.tek \
 	 output/apps/iroha.tek output/apps/chklang.tek \
-	 output/apps/notrec.tek
+	 output/apps/notrec.tek output/apps/bball.tek output/apps/invader.tek
 SAMPLE_TXTS=ipl.nasm Makefile \
 			../../sample_txts/shiftjis.txt ../../sample_txts/euc.txt ../../sample_txts/utf8.txt
 

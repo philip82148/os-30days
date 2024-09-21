@@ -1,8 +1,5 @@
 #!/bin/bash -eu
 
 cd ./scripts/..
-
-for f in ./*/*/*/Makefile; do
-    cd $(dirname $f) &&
-        make clean &
-done
+./scripts/clean01-15.sh
+./scripts/clean16-30.sh

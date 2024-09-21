@@ -17,7 +17,8 @@ APPS=output/apps/a.tek output/apps/hello3.tek output/apps/hello4.tek output/apps
 	 output/apps/color.tek output/apps/color2.tek \
 	 output/apps/sosu.tek output/apps/sosu2.tek output/apps/sosu3.tek \
 	 output/apps/typemkfl.tek output/apps/type.tek \
-	 output/apps/iroha.tek output/apps/chklang.tek
+	 output/apps/iroha.tek output/apps/chklang.tek \
+	 output/apps/notrec.tek
 SAMPLE_TXTS=ipl.nasm Makefile \
 			../../sample_txts/shiftjis.txt ../../sample_txts/euc.txt ../../sample_txts/utf8.txt
 

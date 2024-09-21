@@ -146,18 +146,20 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move) {
 void cons_newline(struct CONSOLE *cons) {
   struct SHEET *sheet = cons->sht;
   struct TASK *task = task_now();
-  if (cons->cur_y < 28 + 112) {
+  struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
+  int textbox_height = binfo->scrny - 28 - 37;
+  if (cons->cur_y < 28 + textbox_height - 16) {
     cons->cur_y += 16;  // Next line
   } else {              // Scroll
     if (sheet) {
-      for (int y = 28; y < 28 + 112; y++) {
+      for (int y = 28; y < 28 + textbox_height - 16; y++) {
         for (int x = 8; x < 8 + 240; x++)
           sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (y + 16) * sheet->bxsize];
       }
-      for (int y = 28 + 112; y < 28 + 128; y++) {
+      for (int y = 28 + textbox_height - 16; y < 28 + textbox_height; y++) {
         for (int x = 8; x < 8 + 240; x++) sheet->buf[x + y * sheet->bxsize] = COL8_000000;
       }
-      sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+      sheet_refresh(sheet, 8, 28, 8 + 240, 28 + textbox_height);
     }
   }
   cons->cur_x = 8;

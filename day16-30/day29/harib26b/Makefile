@@ -1,5 +1,5 @@
 IMG=output/haribote-os.img
-LIB_OBJECTS=output/lib/my_sprintf.o output/lib/my_strcmp.o output/lib/my_strncmp.o
+LIB_OBJECTS=output/lib/my_sprintf.o output/lib/my_strcmp.o output/lib/my_strncmp.o output/lib/my_memcmp.o
 API_OBJECTS=output/api/api001.obj output/api/api002.obj output/api/api003.obj output/api/api004.obj \
 			output/api/api005.obj output/api/api006.obj output/api/api007.obj output/api/api008.obj \
 			output/api/api009.obj output/api/api010.obj output/api/api011.obj output/api/api012.obj \
@@ -7,15 +7,15 @@ API_OBJECTS=output/api/api001.obj output/api/api002.obj output/api/api003.obj ou
 			output/api/api017.obj output/api/api018.obj output/api/api019.obj output/api/api020.obj \
 			output/api/api021.obj output/api/api022.obj output/api/api023.obj output/api/api024.obj \
 			output/api/api025.obj output/api/api026.obj output/api/api027.obj
-APPS=output/apps/a.hrb output/apps/hello3.hrb output/apps/hello4.hrb output/apps/hello5.hrb \
-	 output/apps/winhelo.hrb output/apps/winhelo2.hrb output/apps/winhelo3.hrb \
-	 output/apps/star1.hrb output/apps/stars.hrb output/apps/stars2.hrb \
-	 output/apps/lines.hrb output/apps/walk.hrb \
-	 output/apps/noodle.hrb output/apps/beepdown.hrb \
-	 output/apps/color.hrb output/apps/color2.hrb \
-	 output/apps/sosu.hrb output/apps/sosu2.hrb output/apps/sosu3.hrb \
-	 output/apps/typemkfl.hrb output/apps/type.hrb \
-	 output/apps/iroha.hrb output/apps/chklang.hrb
+APPS=output/apps/a.tek output/apps/hello3.tek output/apps/hello4.tek output/apps/hello5.tek \
+	 output/apps/winhelo.tek output/apps/winhelo2.tek output/apps/winhelo3.tek \
+	 output/apps/star1.tek output/apps/stars.tek output/apps/stars2.tek \
+	 output/apps/lines.tek output/apps/walk.tek \
+	 output/apps/noodle.tek output/apps/beepdown.tek \
+	 output/apps/color.tek output/apps/color2.tek \
+	 output/apps/sosu.tek output/apps/sosu2.tek output/apps/sosu3.tek \
+	 output/apps/typemkfl.tek output/apps/type.tek \
+	 output/apps/iroha.tek output/apps/chklang.tek
 SAMPLE_TXTS=ipl.nasm Makefile \
 			../../sample_txts/shiftjis.txt ../../sample_txts/euc.txt ../../sample_txts/utf8.txt
 
@@ -29,9 +29,12 @@ run: $(IMG)
 rerun: re run
 .PHONY: rerun
 
-$(IMG): output/ipl.bin output/haribote.sys ../../fonts/nihongo.fnt $(SAMPLE_TXTS) $(APPS)
+$(IMG): output/ipl.bin output/haribote.sys ../../fonts/nihongo.tek $(APPS) $(SAMPLE_TXTS)
 	mformat -f 1440 -B $< -C -i $@
 	mcopy $(filter-out $<, $^) -i $@ ::
+
+output/%.tek: output/%.hrb
+	../../../z_tools_linux/bim2bin -osacmp in:output/$*.hrb out:output/$*.tek
 
 output/%.hrb: app.lds output/%.obj
 	mkdir -p $(@D)
@@ -48,7 +51,7 @@ output/bootpack.hrb: output/liblib.a bootpack.lds output/c/bootpack.o output/nas
 					 output/hankaku.o output/c/graphic.o output/c/dsctbl.o output/c/int.o \
 					 output/c/fifo.o output/c/keyboard.o output/c/mouse.o output/c/memory.o \
 					 output/c/sheet.o output/c/timer.o output/c/mtask.o output/c/window.o \
-					 output/c/console.o output/c/file.o
+					 output/c/console.o output/c/file.o output/c/tek.o
 	gcc -nostdlib -m32 -fno-pie -Wl,-Map=output/bootpack.map -g -T $(filter-out %.a, $^) \
 		-Loutput -llib -o $@
 

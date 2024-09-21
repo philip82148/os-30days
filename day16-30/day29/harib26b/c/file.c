@@ -56,3 +56,21 @@ struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max) {
   }
   return 0;  // Not found
 }
+
+char *file_loadfile2(int clustno, int *psize, int *fat) {
+  int size = *psize;
+  struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+  char *buf = (char *)memman_alloc_4k(memman, size);
+  file_loadfile(clustno, size, buf, fat, (char *)(ADR_DISKIMG + 0x003e00));
+  if (size >= 17) {
+    int size2 = tek_getsize((unsigned char *)buf);
+    if (size2 > 0) {
+      char *buf2 = (char *)memman_alloc_4k(memman, size2);
+      tek_decomp((unsigned char *)buf, buf2, size2);
+      memman_free_4k(memman, (int)buf, size);
+      buf = buf2;
+      *psize = size2;
+    }
+  }
+  return buf;
+}

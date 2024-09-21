@@ -107,15 +107,17 @@ void HariMain() {
   fifo32_put(&keycmd, KEYCMD_LED);
   fifo32_put(&keycmd, key_leds);
 
-  // Read nihongo.fnt
-  unsigned char *nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
+  // Read nihongo.tek
+  unsigned char *nihongo;
   int *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
   file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
   struct FILEINFO *finfo =
-      file_search("nihongo.fnt", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+      file_search("nihongo.tek", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
   if (finfo != 0) {
-    file_loadfile(finfo->clustno, finfo->size, nihongo, fat, (char *)(ADR_DISKIMG + 0x003e00));
+    int i = finfo->size;
+    nihongo = (unsigned char *)file_loadfile2(finfo->clustno, &i, fat);
   } else {
+    nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
     for (int i = 0; i < 16 * 256; i++) nihongo[i] = hankaku[i];  // Copy hankaku characters
     for (int i = 16 * 256; i < 16 * 256 + 32 * 94 * 47; i++) nihongo[i] = 0xff;  // fill with 0xff
   }

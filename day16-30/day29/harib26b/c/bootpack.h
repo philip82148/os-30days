@@ -6,6 +6,7 @@
 void my_sprintf(char *str, const char *fmt, ...);
 int my_strcmp(const char *s1, const char *s2);
 int my_strncmp(const char *s1, const char *s2, int n);
+int my_memcmp(const void *d, const void *s, unsigned long sz);
 
 // asmhead.nas ------------------------------------------------------------------------------------
 #define ADR_BOOTINFO 0x00000ff0
@@ -322,6 +323,11 @@ struct FILEINFO {
 void file_readfat(int *fat, unsigned char *img);
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
+char *file_loadfile2(int clustno, int *psize, int *fat);
+
+// tek.c ------------------------------------------------------------------------------------------
+int tek_getsize(unsigned char *p);
+int tek_decomp(unsigned char *p, char *q, int size);
 
 // bootpack.c -------------------------------------------------------------------------------------
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);
